@@ -1,6 +1,7 @@
 from parso.normalizer import Rule
 from src.Query import Query
 
+
 def main():
     query = input("Enter a query: ")
     query_to_parse = Query(query)

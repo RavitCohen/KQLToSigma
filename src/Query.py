@@ -3,7 +3,6 @@ from mapping.products import kql_product_mapping
 from mapping.services import kql_service_mapping
 
 class Query:
-
     def __init__(self, KQL_to_map):
         #Step 1: parse table
         # TODO: self.table =
