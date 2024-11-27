@@ -1,6 +1,7 @@
 import re;
 from mapping.products import kql_product_mapping
 from mapping.services import kql_service_mapping
+from GenarateRule import *
 
 class Query:
     def __init__(self, KQL_to_map):
@@ -52,3 +53,13 @@ class Query:
 
     def handle_fields(self):
         return
+
+    def parse_to_rule(self):
+        mapped_project = self.handle_project()
+        mapped_logsource = self.handle_logsource()
+        mapped_fields = self.handle_fields()
+        rule = GenarateRule(mapped_project, mapped_logsource, mapped_fields)
+        return rule.finalize_rule()
+
+
+
