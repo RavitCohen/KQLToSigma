@@ -1,4 +1,3 @@
-#from ..pySigma_QRadar_base.QRadarPipeline import IPV4, IPV6
 
 DIR_PATH_FILE_NAME = "_fileName"
 DIR_PATH_FILE_PARENT_NAME = "_fileParentName"

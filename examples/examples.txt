@@ -1,6 +1,9 @@
 events_all
 | project _User
-| where (_fileName contains 'C:\\\\Windows\\\\' or _fileName contains 'C:\\\\Temp\\\\' or _fileName contains 'C:\\\\PerfLogs\\\\' or _fileName contains 'C:\\\\Users\\\\Public\\\\' or _fileName contains 'C:\\\\Users\\\\Default\\\\' or _fileName contains '\\\\Client\\\\' or _fileName contains '\\\\tsclient\\\\' or _fileName contains '\\\\inetpub\\\\' or _fileName contains '/www/' or _fileName contains 'apache' or _fileName contains 'tomcat' or _fileName contains 'nginx' or _fileName contains 'weblogic') or (_fileName endswith '.asax' or _fileName endswith '.ashx' or _fileName endswith '.asmx' or _fileName endswith '.asp' or _fileName endswith '.aspx' or _fileName endswith '.bat' or _fileName endswith '.cfm' or _fileName endswith '.cgi' or _fileName endswith '.chm' or _fileName endswith '.cmd' or _fileName endswith '.dat' or _fileName endswith '.ear' or _fileName endswith '.gif' or _fileName endswith '.hta' or _fileName endswith '.jpeg' or _fileName endswith '.jpg' or _fileName endswith '.jsp' or _fileName endswith '.jspx' or _fileName endswith '.lnk' or _fileName endswith '.php' or _fileName endswith '.pl' or _fileName endswith '.png' or _fileName endswith '.ps1' or _fileName endswith '.psm1' or _fileName endswith '.py' or _fileName endswith '.pyc' or _fileName endswith '.rb' or _fileName endswith '.scf' or _fileName endswith '.sct' or _fileName endswith '.sh' or _fileName endswith '.svg' or _fileName endswith '.txt' or _fileName endswith '.vbe' or _fileName endswith '.vbs' or _fileName endswith '.war' or _fileName endswith '.wsf' or _fileName endswith '.wsh' or _fileName endswith '.xml')
+| where 
+
+(_fileName contains 'C:\\\\Windows\\\\' or _fileName contains 'C:\\\\Temp\\\\' or _fileName contains 'C:\\\\PerfLogs\\\\' or _fileName contains 'C:\\\\Users\\\\Public\\\\' or _fileName contains 'C:\\\\Users\\\\Default\\\\' or _fileName contains '\\\\Client\\\\' or _fileName contains '\\\\tsclient\\\\' or _fileName contains '\\\\inetpub\\\\' or _fileName contains '/www/' or _fileName contains 'apache' or _fileName contains 'tomcat' or _fileName contains 'nginx' or _fileName contains 'weblogic')
+        or (_fileName endswith '.asax' or _fileName endswith '.ashx' or _fileName endswith '.asmx' or _fileName endswith '.asp' or _fileName endswith '.aspx' or _fileName endswith '.bat' or _fileName endswith '.cfm' or _fileName endswith '.cgi' or _fileName endswith '.chm' or _fileName endswith '.cmd' or _fileName endswith '.dat' or _fileName endswith '.ear' or _fileName endswith '.gif' or _fileName endswith '.hta' or _fileName endswith '.jpeg' or _fileName endswith '.jpg' or _fileName endswith '.jsp' or _fileName endswith '.jspx' or _fileName endswith '.lnk' or _fileName endswith '.php' or _fileName endswith '.pl' or _fileName endswith '.png' or _fileName endswith '.ps1' or _fileName endswith '.psm1' or _fileName endswith '.py' or _fileName endswith '.pyc' or _fileName endswith '.rb' or _fileName endswith '.scf' or _fileName endswith '.sct' or _fileName endswith '.sh' or _fileName endswith '.svg' or _fileName endswith '.txt' or _fileName endswith '.vbe' or _fileName endswith '.vbs' or _fileName endswith '.war' or _fileName endswith '.wsf' or _fileName endswith '.wsh' or _fileName endswith '.xml')
         
         
 detection:
@@ -72,6 +75,7 @@ events_all
         
 logsource:
     product: aws
+    service: ..
 detection:
     selection:
         eventSource: lambda.amazonaws.com
@@ -241,7 +245,11 @@ detection:
 
 
 events_all
-| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and ((_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider'))
+| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and 
+
+
+((_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or 
+(_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider'))
       
 logsource:
     product: aws
@@ -636,7 +644,8 @@ detection:
 
 
 events_all
-| where data_source_type_id=11 and file_parent_name endswith '\\\\bash' and (_CommandLine contains 'id -Gn `' or _CommandLine contains 'id -Gn ''')",
+| where data_source_type_id=11 and file_parent_name endswith '\\\\bash' 
+                                and (_CommandLine contains 'id -Gn `' or _CommandLine contains 'id -Gn ''')",
         
 logsource:
     product: linux
@@ -653,7 +662,9 @@ detection:
 
 
 events_all
-| where data_source_type_id=11 and ((file_name =~ 'dd' and dir_path =~ '/bin') or (file_name =~ 'dd' and dir_path =~ '/usr/bin')) and _CommandLine contains 'of=' and (_CommandLine contains 'if=/dev/zero' or _CommandLine contains 'if=/dev/null')",
+| where data_source_type_id=11 and ((file_name =~ 'dd' and dir_path =~ '/bin') or (file_name =~ 'dd' and dir_path =~ '/usr/bin')) 
+                                and _CommandLine contains 'of=' 
+                                and (_CommandLine contains 'if=/dev/zero' or _CommandLine contains 'if=/dev/null')",
         
 logsource:
     product: linux
@@ -31278,10 +31289,30 @@ STOP
         "name": "Suspicious Ping/Copy Command Combination",
         "origin": "sigma",
         "product": "windows",
-        "pysigma_kql": "events_all\n| where data_source_type_id=12 and (file_name endswith 'cmd.exe' or file_name =~ 'Cmd.Exe') and ((_CommandLine contains ' -n ' or _CommandLine contains ' /n ') and (_CommandLine has_all ('ping', 'copy ', ' /y ')))",
-        "service": null,
-        "sigma_rule": "title: Suspicious Ping/Copy Command Combination\nid: ded2b07a-d12f-4284-9b76-653e37b6c8b0\nstatus: experimental\ndescription: Detects uncommon one-liner command having ping and copy at the same time, which is usually used by malware.\nreferences:\n    - Internal Research\nauthor: X__Junior (Nextron Systems)\ndate: 2023/07/18\ntags:\n    - attack.defense_evasion\n    - attack.t1070.004\nlogsource:\n    category: process_creation\n    product: windows\ndetection:\n    # Note: In the case of sysmon and similar logging utilities, see this discussion https://github.com/SigmaHQ/sigma/discussions/4277\n    selection_cmd:\n        - Image|endswith: '\\cmd.exe'\n        - OriginalFileName: 'Cmd.Exe'\n    selection_cli:\n        CommandLine|contains: # Count\n            - ' -n '\n            - ' /n '\n        CommandLine|contains|all:\n            - 'ping' # Covers \"ping\" and \"ping.exe\"\n            - 'copy '\n            - ' /y '\n    condition: all of selection_*\nfalsepositives:\n    - Unknown\nlevel: medium\n",
-        "warnings": null
+
+
+        events_all\n| 
+        where data_source_type_id=12 and 
+        (file_name endswith 'cmd.exe' or file_name =~ 'Cmd.Exe') and ((_CommandLine contains ' -n ' or _CommandLine contains ' /n ') and (_CommandLine has_all ('ping', 'copy ', ' /y ')))",
+        
+
+
+        logsource:\n    
+            product: windows\n
+            detection:\n        
+        selection_cmd:\n        
+            - Image|endswith: '\\cmd.exe'\n        
+            - OriginalFileName: 'Cmd.Exe'\n    
+        selection_cli:\n        
+            CommandLine|contains:          
+                        - ' -n '\n            
+                        - ' /n '\n       
+            CommandLine|contains|all:         
+                        - 'ping'           
+                        - 'copy '         
+                        - ' /y '    
+        condition: all of selection_*
+        
     },
     {
         "category": "process_creation",

@@ -4,17 +4,45 @@ from mapping.services import kql_service_mapping
 from GenarateRule import *
 
 class Query:
-    def __init__(self, KQL_to_map):
-        #Step 1: parse table
-        # TODO: self.table =
 
-        # Step 2: parse project
-        # TODO: self.project =
+#-------------------------Constructor------------------------#
 
-        # Step 3: parse logsource
+    def __init__(self, query):
+        
+        self.table = self.extractTable(query)
+        self.project = self.extractProject(query)
+        self.logsoure = self.extractLogsource(query)
+        self.fields = self.extractFields(query)
+
+
+#----------------Constructor's Helper Functions---------------#
+
+    def extractTable(self, query):
+        regex = r"^(\S+)\s*\r?\n?\|"
+        match = re.match(regex, query)
+
+        if match:
+            return match.group(1)
+        else:
+            raise ValueError("Illegal input: Expected a table.")
+    
+
+    def extractProject(self,query):
+        regex = r"(?<=\|)\s*project\s+([^\|]+)"
+        matches = re.findall(regex, query)
+
+        project = []
+        for match in matches:
+            project.extend([col.strip() for col in match.split(',')])
+
+        return project
+
+
+    def extractLogsource(self, query):
         pattern = r"data_source_type_id\s*=\s*(\d+)|data_source_type_id\s+in\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)"
-        matches = re.findall(pattern, KQL_to_map)
+        matches = re.findall(pattern, query)
         numbers = []
+        
         for match in matches:
             if match[0]:  # If the first group (for = ) is not empty
                 numbers.append(int(match[0]))
@@ -22,11 +50,18 @@ class Query:
                 numbers.extend(map(int, match[1].split(',')))
         self.logsource=numbers
 
-        # Step 4: parse fields
-        # TODO: self.fields =
+        return numbers
 
-    def handle_project(self):
-        return
+#TODO: decide what to do with this according to the implementation
+    def extractFields(self, query):
+        
+        new_query = re.sub(r"^[^\|]*\|", "", query, count=1)
+        new_query = re.sub(r"\|?\s*project[^\n]*\n?", "", new_query)
+        new_query = re.sub(r"data_source_type_id\s*(=|in)\s*\([^\)]+\|\s*\d+\)\s*and?\s*", "", new_query)
+    
+
+#--------------------------Functions-------------------------#
+
 
     def handle_logsource(self):
         products = set()
@@ -51,14 +86,20 @@ class Query:
 
         return products, services
 
-    def handle_fields(self):
-        return
+    
+    #TODO: implement after we'll get a fields mapping
+    def handle_project(self):
+        pass
+
 
     def parse_to_rule(self):
+        
         mapped_project = self.handle_project()
         mapped_logsource = self.handle_logsource()
         mapped_fields = self.handle_fields()
+        
         rule = GenarateRule(mapped_project, mapped_logsource, mapped_fields)
+        
         return rule.finalize_rule()
 
 
