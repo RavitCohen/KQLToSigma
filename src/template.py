@@ -2,20 +2,83 @@ import re
 from mapping.products import kql_product_mapping
 from mapping.services import kql_service_mapping
 
-kql = """
-    events_all
-    | where data_source_type_id=12 or data_source_type_id =    13 or data_source_type_id in (  11, 31 , 54 , 446  ) or data_source_type_id in   (21,   87,64)"""
+query = """events_all
+| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'
+| project _User
+| where _eventName endswith 'Configuration'
+| project _User, _eventSource
+"""
 
-#TODO:check if the given expression is a legal KQL query
+new_query = re.sub(r"^[^\|]*\|", "", query, count=1)
+new_query = re.sub(r"\|?\s*project[^\n]*\n?", "", new_query)
+new_query = re.sub(r"data_source_type_id\s*(=|in)\s*\([^\)]+\|\s*\d+\)\s*and?\s*", "", new_query)
+print(new_query)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 #-------------------- Handle logsource --------------------#
 
-pattern = r"data_source_type_id\s*=\s*(\d+)|data_source_type_id\s+in\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)"
+#pattern = r"data_source_type_id\s*=\s*(\d+)|data_source_type_id\s+in\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)"
 
 
-#Step 1: get the id-s numbers.
+
+
+'''#Step 1: get the id-s numbers.
 matches = re.findall(pattern, kql)
 
 numbers = []
@@ -53,4 +116,4 @@ for num in numbers:
             
 print(f"Products: {products}\n")
 print(f"Services: {services}\n")
-
+'''
