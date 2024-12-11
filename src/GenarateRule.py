@@ -5,9 +5,9 @@ class GenarateRule:
 
 #-------------------------Constructor------------------------#
 
-    def __init__(self, mapped_project, mapped_logsource, mapped_fields):
+    def __init__(self, mapped_project, mapped_data_source, mapped_fields):
         self.mapped_project = mapped_project
-        self.mapped_logsource = mapped_logsource
+        self.mapped_data_source = mapped_data_source
         self.mapped_fields = mapped_fields
         self.rule = {   "logsource:": {"product:": [], "service:": []},
                         "detection:": { "condition:": {}},
@@ -25,7 +25,7 @@ class GenarateRule:
 
     def assign_logsource(self):
         #TODO: assign self.mapped_logsource into self.final_dict
-        products, services = self.mapped_logsource
+        products, services = self.mapped_data_source
         self.rule["logsource:"]["product:"] = products
         self.rule["logsource:"]["service:"] = services
         

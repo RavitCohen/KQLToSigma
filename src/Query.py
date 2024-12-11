@@ -1,6 +1,7 @@
 import re;
 from mapping.products import kql_product_mapping
 from mapping.services import kql_service_mapping
+from mapping.fields import kql_field_mapping
 from GenarateRule import *
 
 class Query:
@@ -9,65 +10,100 @@ class Query:
 
     def __init__(self, query):
         
-        self.table = self.extractTable(query)
-        self.project = self.extractProject(query)
-        self.logsoure = self.extractLogsource(query)
-        self.fields = self.extractFields(query)
+        self.table = self.extract_table(query)
+        self.project = self.extract_project(query)
+        self.data_source = self.extract_data_source(query)
+        self.fields = self.extract_field(query)
 
 
 #----------------Constructor's Helper Functions---------------#
 
-    def extractTable(self, query):
+    def extract_table(self, query):
         regex = r"^(\S+)\s*\r?\n?\|"
         match = re.match(regex, query)
 
-        if match:
-            return match.group(1)
-        else:
+        if not match:
             raise ValueError("Illegal input: Expected a table.")
-    
 
-    def extractProject(self,query):
+        return match.group(1)
+
+
+    # def extract_project(self, query):
+    #     regex = r"(?<=\|)\s*project\s+([^\|]+)"
+    #     matches = re.findall(regex, query)
+    #     if not matches:
+    #         raise ValueError("Illegal input: Expected a project.")
+    #     project = []
+    #     for match in matches:
+    #         col_to_check = [col.strip() for col in match.split(',')]
+    #         print (col_to_check)
+    #         if "" in col_to_check:
+    #             raise ValueError("Illegal input: Expected a project.")
+    #         project.extend(col_to_check)
+    #
+    #     return project
+
+    def extract_project(self, query):
         regex = r"(?<=\|)\s*project\s+([^\|]+)"
         matches = re.findall(regex, query)
-
         project = []
         for match in matches:
-            project.extend([col.strip() for col in match.split(',')])
+            col_to_check = [col.strip() for col in match.split(',')]
+            print (col_to_check)
+            if "" in col_to_check:
+                raise ValueError("Illegal input: Expected a project.")
+            project.extend(col_to_check)
 
         return project
 
 
-    def extractLogsource(self, query):
+    def extract_data_source(self, query):
         pattern = r"data_source_type_id\s*=\s*(\d+)|data_source_type_id\s+in\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)"
         matches = re.findall(pattern, query)
         numbers = []
-        
+
         for match in matches:
             if match[0]:  # If the first group (for = ) is not empty
                 numbers.append(int(match[0]))
             if match[1]:  # If the second group (for in () ) is not empty
                 numbers.extend(map(int, match[1].split(',')))
-        self.logsource=numbers
+        self.data_source=numbers
 
         return numbers
 
-#TODO: decide what to do with this according to the implementation
-    def extractFields(self, query):
-        
+    #TODO: decide what to do with this according to the implementation
+    #Return all the fields as a string and split in the handle
+    def extract_field(self, query):
+
         new_query = re.sub(r"^[^\|]*\|", "", query, count=1)
         new_query = re.sub(r"\|?\s*project[^\n]*\n?", "", new_query)
         new_query = re.sub(r"data_source_type_id\s*(=|in)\s*\([^\)]+\|\s*\d+\)\s*and?\s*", "", new_query)
-    
+
 
 #--------------------------Functions-------------------------#
 
+    # TODO: implement after we'll get a fields mapping
+    def handle_project(self):
+        fields = set()
 
-    def handle_logsource(self):
+        for pro in self.project:
+            column = kql_field_mapping.get(pro, None)
+            if column is None:
+                raise ValueError(f'ERROR: {pro} column does not exist in table: {self.table}.')
+            fields.add(column)
+
+        return fields
+
+
+    def handle_data_source(self):
+        pass
+
+
+    def handle_data_source(self):
         products = set()
         services = set()
 
-        for num in self.logsource:
+        for num in self.data_source:
 
             collected_products = {kql_product_mapping[num]} if num in kql_product_mapping else set()
 
@@ -86,21 +122,35 @@ class Query:
 
         return products, services
 
-    
-    #TODO: implement after we'll get a fields mapping
-    def handle_project(self):
-        pass
-
 
     def parse_to_rule(self):
-        
+
         mapped_project = self.handle_project()
-        mapped_logsource = self.handle_logsource()
-        mapped_fields = self.handle_fields()
-        
-        rule = GenarateRule(mapped_project, mapped_logsource, mapped_fields)
-        
+        mapped_data_source = self.handle_data_source()
+        mapped_fields = self.handle_field()
+
+        rule = GenarateRule(mapped_project, mapped_data_source, mapped_fields)
+
         return rule.finalize_rule()
 
 
+#TESTING TEMPORARY
+query = ("events_all\n| project defef \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'")
+print(query)
+parse_query = Query(query)
+print(parse_query.table)
+print(parse_query.project)
+print(parse_query.data_source)
+print(parse_query.fields)
 
+# events_all
+# | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'
+#
+# logsource:
+#     product: aws
+#     service: ..
+# detection:
+#     selection:
+#         eventSource: lambda.amazonaws.com
+#         eventName|startswith: 'UpdateFunctionConfiguration'
+#     condition: selection

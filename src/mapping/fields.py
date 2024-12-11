@@ -87,35 +87,35 @@ file_and_dir_field_mapping = {
     "processPath": DIR_PATH_FILE_NAME,
 }
 
-ip_field_mapping = {
-    "Address": {
-        IPV4: "_ipv4",
-        IPV6: "_ipv6"
-    },
-    "DestinationIp": {
-        IPV4: "_ipv4",
-        IPV6: "_ipv6"
-    },
-    "IpAddress": {
-        IPV4: "_ipv4",
-        IPV6: "_ipv6"
-    },
-    "IPaddress": {
-        IPV4: "_ipv4",
-        IPV6: "_ipv6"
-    },
-    "dst_ip": {
-        IPV4: "_ipv4",
-        IPV6: "_ipv6"
-    },
-    "src_ip": {
-        IPV4: "_ipv4",
-        IPV6: "_ipv6"
-    }
-}
+# ip_field_mapping = {
+#     "Address": {
+#         IPV4: "_ipv4",
+#         IPV6: "_ipv6"
+#     },
+#     "DestinationIp": {
+#         IPV4: "_ipv4",
+#         IPV6: "_ipv6"
+#     },
+#     "IpAddress": {
+#         IPV4: "_ipv4",
+#         IPV6: "_ipv6"
+#     },
+#     "IPaddress": {
+#         IPV4: "_ipv4",
+#         IPV6: "_ipv6"
+#     },
+#     "dst_ip": {
+#         IPV4: "_ipv4",
+#         IPV6: "_ipv6"
+#     },
+#     "src_ip": {
+#         IPV4: "_ipv4",
+#         IPV6: "_ipv6"
+#     }
+# }
 
-ip_field_values = set(val for values in ip_field_mapping.values() for value in
-                      values.values() for val in value)
+# ip_field_values = set(val for values in ip_field_mapping.values() for value in
+#                       values.values() for val in value)
 
 string_value_field_mapping = {
     "EventID": "_EventID",
@@ -134,6 +134,6 @@ list_int_value_field_mapping = [
 list_value_field_mapping = list_str_value_field_mapping + list_int_value_field_mapping
 
 kql_field_mapping = {
-    **field_mapping, **string_value_field_mapping, **file_and_dir_field_mapping,
-    **ip_field_mapping
+    **field_mapping, **string_value_field_mapping, **file_and_dir_field_mapping
+    # ,**ip_field_mapping
 }
