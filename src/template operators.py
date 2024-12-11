@@ -2,15 +2,6 @@ import re
 
 
 def parse_logical_expression(expression: str):
-    """
-    Parse a logical expression and store operators (AND, OR) with their corresponding operands.
-
-    Args:
-        expression (str): Logical expression, e.g., "(a and (b or c)) or a or c".
-
-    Returns:
-        dict: Parsed structure of operators and operands.
-    """
 
     def parse(expression):
         stack = []
@@ -47,7 +38,10 @@ def parse_logical_expression(expression: str):
 
 
 # Example usage
-expression = "('hygv:jhbh' and (b or c)) or a or c"
-parsed_structure = parse_logical_expression(expression)
+expression1 = "_eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'"
+expression2 = "('hygv:jhbh' and (b or c)) or a or c"
+parsed_structure1 = parse_logical_expression(expression1)
+parsed_structure2 = parse_logical_expression(expression2)
 
-print(parsed_structure)
+print(parsed_structure1)
+print(parsed_structure2)
