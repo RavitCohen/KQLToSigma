@@ -169,19 +169,25 @@ class Query:
 
         return products, services
 
+    def handle_field(self):
+        
+        detection = self.fields.copy()
+        for key,value in detection:
+            if key == 'operands' :
+                for tup in value:
+                    tup[0] = kql_field_mapping.get(tup[0], None)
+        
+        return detection
 
     def parse_to_rule(self):
 
         mapped_project = self.handle_project()
         mapped_data_source = self.handle_data_source()
-        print("mapped_project", mapped_project)
-        print("mapped_data_source", mapped_data_source)
-        return
-        #mapped_fields = self.handle_field()
+        mapped_fields = self.handle_field()
 
-        #rule = GenarateRule(mapped_project, mapped_data_source, mapped_fields)
-
-        #return rule.finalize_rule()
+        rule = GenarateRule(mapped_project, mapped_data_source, mapped_fields)
+        
+        return rule.finalize_rule()
 
 
 #TESTING TEMPORARY

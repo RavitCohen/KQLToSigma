@@ -4433,10 +4433,23 @@ STOP
         "name": "Equation Group C2 Communication",
         "origin": "sigma",
         "product": null,
-        "pysigma_kql": "events_all\n| where ((_ in ('69.42.98.86', '89.185.234.145')) or (i in ('69.42.98.86', '89.185.234.145')) or (p in ('69.42.98.86', '89.185.234.145')) or (v in ('69.42.98.86', '89.185.234.145')) or (4 in ('69.42.98.86', '89.185.234.145')))",
-        "service": null,
-        "sigma_rule": "title: Equation Group C2 Communication\nid: 881834a4-6659-4773-821e-1c151789d873\nstatus: test\ndescription: Detects communication to C2 servers mentioned in the operational notes of the ShadowBroker leak of EquationGroup C2 tools\nreferences:\n    - https://steemit.com/shadowbrokers/@theshadowbrokers/lost-in-translation\n    - https://medium.com/@msuiche/the-nsa-compromised-swift-network-50ec3000b195\nauthor: Florian Roth (Nextron Systems)\ndate: 2017/04/15\nmodified: 2021/11/27\ntags:\n    - attack.command_and_control\n    - attack.g0020\n    - attack.t1041\nlogsource:\n    category: firewall\ndetection:\n    select_outgoing:\n        dst_ip:\n            - '69.42.98.86'\n            - '89.185.234.145'\n    select_incoming:\n        src_ip:\n            - '69.42.98.86'\n            - '89.185.234.145'\n    condition: 1 of select*\nfalsepositives:\n    - Unknown\nlevel: high\n",
-        "warnings": null
+
+
+
+        events_all\n| where ((_ in ('69.42.98.86', '89.185.234.145')) or (i in ('69.42.98.86', '89.185.234.145')) or (p in ('69.42.98.86', '89.185.234.145')) or (v in ('69.42.98.86', '89.185.234.145')) or (4 in ('69.42.98.86', '89.185.234.145')))",
+    
+        logsource:
+            detection:
+                select_outgoing:
+                        dst_ip:
+                            - '69.42.98.86'
+                            - '89.185.234.145'
+                select_incoming:
+                        src_ip:
+                            - '69.42.98.86'
+                            - '89.185.234.145'
+        condition: 1 of select*
+        
     },
     {
         "category": null,
@@ -4612,9 +4625,23 @@ STOP
         "origin": "sigma",
         "product": "zeek",
         "pysigma_kql": "events_all\n| where _fileName in~ ('\\\\mimidrv', '\\\\lsass', '\\\\windows\\\\minidump\\\\', '\\\\hiberfil', '\\\\sqldmpr', '\\\\sam', '\\\\ntds.dit', '\\\\security')",
-        "service": "smb_files",
-        "sigma_rule": "title: Transferring Files with Credential Data via Network Shares - Zeek\nid: 2e69f167-47b5-4ae7-a390-47764529eff5\nrelated:\n    - id: 910ab938-668b-401b-b08c-b596e80fdca5\n      type: similar\nstatus: test\ndescription: Transferring files with well-known filenames (sensitive files with credential data) using network shares\nreferences:\n    - https://www.slideshare.net/heirhabarov/hunting-for-credentials-dumping-in-windows-environment\nauthor: '@neu5ron, Teymur Kheirkhabarov, oscd.community'\ndate: 2020/04/02\nmodified: 2021/11/27\ntags:\n    - attack.credential_access\n    - attack.t1003.002\n    - attack.t1003.001\n    - attack.t1003.003\nlogsource:\n    product: zeek\n    service: smb_files\ndetection:\n    selection:\n        name:\n            - '\\mimidrv'\n            - '\\lsass'\n            - '\\windows\\minidump\\'\n            - '\\hiberfil'\n            - '\\sqldmpr'\n            - '\\sam'\n            - '\\ntds.dit'\n            - '\\security'\n    condition: selection\nfalsepositives:\n    - Transferring sensitive files for legitimate administration work by legitimate administrator\nlevel: medium\n",
-        "warnings": null
+    
+        logsource:
+            product: zeek    
+            service: smb_files
+            detection:
+                selection:
+                    name:
+                        - '\\mimidrv'
+                        - '\\lsass'
+                        - '\\windows\\minidump\\'
+                        - '\\hiberfil'
+                        - '\\sqldmpr'
+                        - '\\sam'
+                        - '\\ntds.dit'
+                        - '\\security'
+                condition: selection\nfalsepositives:\n    - Transferring sensitive files for legitimate administration work by legitimate administrator\nlevel: medium\n",
+        
     },
     {
         "category": null,

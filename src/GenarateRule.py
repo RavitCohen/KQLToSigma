@@ -10,7 +10,7 @@ class GenarateRule:
         self.mapped_data_source = mapped_data_source
         self.mapped_fields = mapped_fields
         self.rule = {   "logsource:": {"product:": [], "service:": []},
-                        "detection:": { "condition:": {}},
+                        "detection:": { "selection:" : {} , "condition:": []},
                         "field:": []}
 
 
