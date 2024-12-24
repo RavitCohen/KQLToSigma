@@ -41,4 +41,12 @@ class GenarateRule:
 
     def finalize_rule(self):
         #TODO: convert self.final_dict to string according by sigma rule
+        self.assign_project()
+        self.assign_logsource()
+        self.assign_fields()
         return  # final string to print
+
+
+rule = GenarateRule('Hashes',({'aws'}, {'cloudtrail'}),{'logical operation': 'and', 'operands': [('eventSource', '=~', "'lambda.amazonaws.com'"), ('eventName', 'startswith', "'UpdateFunctionConfiguration'")]})
+rule.finalize_rule()
+print(rule.rule)

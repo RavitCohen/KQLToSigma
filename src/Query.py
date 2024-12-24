@@ -145,7 +145,7 @@ class Query:
         return fields
 
 
-
+#TODO:remove {}
     def handle_data_source(self):
         products = set()
         services = set()
@@ -170,13 +170,8 @@ class Query:
         return products, services
 
     def handle_field(self):
-        
         detection = self.fields.copy()
-        for key,value in detection:
-            if key == 'operands' :
-                for tup in value:
-                    tup[0] = kql_field_mapping.get(tup[0], None)
-        
+        detection["operands"] = [(kql_field_mapping.get(t[0], t[0]), t[1], t[2]) for t in detection["operands"]]
         return detection
 
     def parse_to_rule(self):
@@ -191,13 +186,14 @@ class Query:
 
 
 #TESTING TEMPORARY
-query = ("events_all\n| project Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'")
+query = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'")
 parse_query = Query(query)
-print(parse_query.table)
-print(parse_query.project)
-print(parse_query.data_source)
-print(parse_query.fields)
-parse_query.parse_to_rule()
+print(parse_query.handle_project())
+print(parse_query.handle_data_source())
+print(parse_query.handle_field())
+print(type(parse_query.handle_project()))
+print(type(parse_query.handle_data_source()))
+print(type(parse_query.handle_field()))
 # events_all
 # | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'
 #
