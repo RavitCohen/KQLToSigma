@@ -18,13 +18,11 @@ class GenarateRule:
 #--------------------------Functions-------------------------#
 
 
-#TODO: assign self.mapped_project into self.rule
     def assign_project(self):
         self.rule["field:"] = self.mapped_project
         
 
     def assign_logsource(self):
-        #TODO: assign self.mapped_logsource into self.final_dict
         products, services = self.mapped_data_source
         self.rule["logsource:"]["product:"] = products
         self.rule["logsource:"]["service:"] = services

@@ -132,7 +132,6 @@ class Query:
 
 #--------------------------Functions-------------------------#
 
-    # TODO: implement after we'll get a fields mapping
     def handle_project(self):
         fields = set()
 
