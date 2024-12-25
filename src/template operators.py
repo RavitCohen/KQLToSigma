@@ -67,7 +67,7 @@ print(ex1)
 
 
 # Example usage
-expression1 = "_eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'"
+expression1 = "_destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904)"
 expression2 = "(a = d and (b = f or c = t)) or a = f or c = d"
 parsed_structure1 = parse_logical_expression(expression1)
 parsed_structure2 = parse_logical_expression(expression2)

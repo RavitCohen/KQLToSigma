@@ -24,13 +24,11 @@ class GenerateRule:
 #--------------------------Functions-------------------------#
 
 
-#TODO: assign self.mapped_project into self.rule
     def assign_project(self):
         self.rule["field:"] = self.mapped_project
         
 
     def assign_logsource(self):
-        #TODO: assign self.mapped_logsource into self.final_dict
         products, services = self.mapped_data_source
         self.rule["logsource:"]["product:"] = products
         self.rule["logsource:"]["service:"] = services
@@ -47,4 +45,12 @@ class GenerateRule:
 
     def finalize_rule(self):
         #TODO: convert self.final_dict to string according by sigma rule
+        self.assign_project()
+        self.assign_logsource()
+        self.assign_fields()
         return  # final string to print
+
+
+rule = GenarateRule('Hashes',({'aws'}, {'cloudtrail'}),{'logical operation': 'and', 'operands': [('eventSource', '=~', "'lambda.amazonaws.com'"), ('eventName', 'startswith', "'UpdateFunctionConfiguration'")]})
+rule.finalize_rule()
+print(rule.rule)
