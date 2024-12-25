@@ -51,6 +51,6 @@ class GenerateRule:
         return  # final string to print
 
 
-rule = GenarateRule('Hashes',({'aws'}, {'cloudtrail'}),{'logical operation': 'and', 'operands': [('eventSource', '=~', "'lambda.amazonaws.com'"), ('eventName', 'startswith', "'UpdateFunctionConfiguration'")]})
+rule = GenerateRule('Hashes',({'aws'}, {'cloudtrail'}),{'logical operation': 'and', 'operands': [('eventSource', '=~', "'lambda.amazonaws.com'"), ('eventName', 'startswith', "'UpdateFunctionConfiguration'")]})
 rule.finalize_rule()
 print(rule.rule)

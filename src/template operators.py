@@ -4,18 +4,30 @@ import re
 def parse_logical_expression(expression: str):
 
     def parse(expression):
+        array_operator = ['in', 'in~' 'has_all']
+        logical_op = ['and', 'or','(',')']
         stack = []
         current = {"logical operation": None, "operands": []}
 
         tokens = re.findall(r'[^\s()]+|and|or|[()]', expression)
-        print(tokens)
         operators_and_operands = []
         i = 0
         while i < len(tokens):
-            if tokens[i] != "and" and tokens[i] != "or" and tokens[i] != "(" and tokens[i] != ")":
-                for_tuple = tokens[i: i+3]
-                operators_and_operands.append(tuple(for_tuple))
-                i = i + 3
+            if tokens[i] not in logical_op:
+                for_tuple = tokens[i: i+2]
+                if for_tuple[1] in array_operator:
+                    counter = 1
+                    res_string = ""
+                    while counter + i < len(tokens) and tokens[counter + i] != ")":
+                        counter += 1
+                        res_string += tokens[counter+i]
+                    i = counter + i +1
+                    for_tuple.append(res_string)
+                    operators_and_operands.append(tuple(for_tuple))
+                else:
+                    for_tuple = tokens[i: i + 3]
+                    operators_and_operands.append(tuple(for_tuple))
+                    i = i + 3
             else:
                 operators_and_operands.append(tokens[i])
                 i = i + 1
@@ -61,16 +73,16 @@ def parse (expression: str):
 
 query = ("events_all\n| project defef \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' ")
 ex1 = parse(query)
-print(ex1)
+#print(ex1)
 # parsed_structure1 = parse_logical_expression(ex1)
 # print(parsed_structure1)
 
 
 # Example usage
-expression1 = "_destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904)"
-expression2 = "(a = d and (b = f or c = t)) or a = f or c = d"
+expression1 = " and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration'"
+#expression2 = "(a = d and (b = f or c = t)) or a = f or c = d"
 parsed_structure1 = parse_logical_expression(expression1)
-parsed_structure2 = parse_logical_expression(expression2)
+#parsed_structure2 = parse_logical_expression(expression2)
 
 print(parsed_structure1)
-print(parsed_structure2)
+#print(parsed_structure2)

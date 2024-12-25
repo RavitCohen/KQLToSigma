@@ -122,7 +122,7 @@ class Query:
 #-----------------------Helper Functions----------------------#
 
 
-    def clean_unnecessary_data(query):
+    def clean_unnecessary_data(self, query):
         start_index = query.find("where") + len("where")
 
         if start_index == -1 : 
@@ -185,12 +185,10 @@ class Query:
 #------------------------TESTING (TEMPORARY)----------------------#
 query = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'")
 parse_query = Query(query)
-print(parse_query.handle_project())
-print(parse_query.handle_data_source())
-print(parse_query.handle_field())
-print(type(parse_query.handle_project()))
-print(type(parse_query.handle_data_source()))
-print(type(parse_query.handle_field()))
+print(parse_query.map_project())
+print(parse_query.map_data_source())
+print(parse_query.map_field())
+
 # events_all
 # | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'
 #
