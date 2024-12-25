@@ -2,9 +2,10 @@ import re;
 from mapping.products import kql_product_mapping
 from mapping.services import kql_service_mapping
 from mapping.fields import kql_field_mapping
-from GenarateRule import *
+from GenerateRule import *
 
 class Query:
+
 
 #-------------------------Constructor------------------------#
 
@@ -18,82 +19,129 @@ class Query:
 
 #----------------Constructor's Helper Functions---------------#
 
-    def extract_table(self, query):
-        regex = r"^(\S+)\s*\r?\n?\|"
-        match = re.match(regex, query)
-
-        if not match:
-            raise ValueError("Illegal input: Expected a table.")
-
-        return match.group(1)
-
-
-    # def extract_project(self, query):
-    #     regex = r"(?<=\|)\s*project\s+([^\|]+)"
-    #     matches = re.findall(regex, query)
-    #     if not matches:
-    #         raise ValueError("Illegal input: Expected a project.")
-    #     project = []
-    #     for match in matches:
-    #         col_to_check = [col.strip() for col in match.split(',')]
-    #         print (col_to_check)
-    #         if "" in col_to_check:
-    #             raise ValueError("Illegal input: Expected a project.")
-    #         project.extend(col_to_check)
-    #
-    #     return project
+    
+    def extract_table(self, query):  #TODO: do we need to make sure table == "events_all"?
+        match = re.match(r"^(\S+)\s*\r?\n?\|", query)
+        if match:
+            return match.group(1)
+        else : raise ValueError("Illegal input: Expected a table.")
+        
 
     def extract_project(self, query):
-        regex = r"(?<=\|)\s*project\s+([^\|]+)"
-        matches = re.findall(regex, query)
-        project = []
+        matches = re.findall(r"(?<=\|)\s*project\s+([^\|]+)", query)
+        projects = []
+        
         for match in matches:
-            col_to_check = [col.strip() for col in match.split(',')]
-            if "" in col_to_check:
-                raise ValueError("Illegal input: Expected a project.")
-            project.extend(col_to_check)
+            columns = [column.strip() for column in match.split(',')]
+            # if "" in col_to_check:
+            #     raise ValueError("Illegal input: Expected a project.")  TODO: (shira) to my opinion these line are not necessary
+            projects.extend(columns)                                     #TODO:  (QUESTION) is it ok to have multiple columns with same names?(legal)
 
-        return project
+        return projects
 
 
     def extract_data_source(self, query):
-        pattern = r"data_source_type_id\s*=\s*(\d+)|data_source_type_id\s+in\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)"
+        pattern = r"data_source_type_id\s*==\s*(\d+)|data_source_type_id\s+in\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)"
         matches = re.findall(pattern, query)
         numbers = []
 
         for match in matches:
-            if match[0]:  # If the first group (for = ) is not empty
+            if match[0]:  
                 numbers.append(int(match[0]))
-            if match[1]:  # If the second group (for in () ) is not empty
+            if match[1]:  
                 numbers.extend(map(int, match[1].split(',')))
-        self.data_source=numbers
 
         return numbers
 
-    #TODO: change names of function and structure
-    #Return all the fields as a string and split in the handle
+  
     def extract_field(self, query):
-        fields = self.helper_extract_field(query)
-        res = self.build_dict_from_filed(fields)
-        return res
+        fields = self.clean_unnecessary_data(query)
+        fields = self.build_fields_dict(fields)
+        return fields
 
-    def helper_extract_field(self, query):
-        start_index = query.find("where")
 
-        if start_index != -1:
-            query_from_where = query[start_index + len("where"):]
-        else:
-            print("'where' not found")
-            return
+#-----------------------Mapping Functions---------------------#
 
-        res = re.sub(r"(?:and|or)?\s*data_source_type_id\s*(?:=\s*\d+|in\s*\(\s*\d+(?:\s*,\s*\d+)*\s*\))\s*(?:and|or)?",
-                     "", query_from_where)
-        return res.strip()
+    #TODO: what description more suitable: map or handle?
+    def map_project(self):
+        fields = set()
 
-    def build_dict_from_filed(self, fields):
+        for pro in self.project:
+            column = kql_field_mapping.get(pro, None)
+            if column is None:
+                raise ValueError(f'ERROR: column : {pro} does not exist in table: {self.table}.')
+            fields.add(column)
+
+        return fields
+
+
+    def map_data_source(self):
+        products = set()
+        services = set()
+
+        for num in self.data_source:
+
+            collected_products = {kql_product_mapping[num]} if num in kql_product_mapping else set()
+
+            if num in kql_service_mapping:
+                value = kql_service_mapping[num]
+                collected_services = set(value) if isinstance(value, list) else {value}
+            else:
+                collected_services = set()
+
+            if not collected_products and not collected_services:
+                print(f"ERROR: the number {num} did not match any key in either mapping!")  #TODO: should be an error?
+                break
+
+            products = products.union(collected_products)
+            services = services.union(collected_services)
+
+        return products, services
+
+
+    def map_field(self):
+        detection = self.fields.copy()
+        detection["operands"] = [(kql_field_mapping.get(t[0], t[0]), t[1], t[2]) for t in detection["operands"]]
+        return detection
+
+
+#--------------------------Functions--------------------------#
+
+
+    def parse_to_rule(self):
+
+        mapped_project = self.map_project()
+        mapped_data_source = self.map_data_source()
+        mapped_fields = self.map_field()
+
+        rule = GenerateRule(mapped_project, mapped_data_source, mapped_fields)
+        
+        return rule.finalize_rule()
+    
+
+#-----------------------Helper Functions----------------------#
+
+
+    def clean_unnecessary_data(query):
+        start_index = query.find("where") + len("where")
+
+        if start_index == -1 : 
+            return ""
+        else : 
+            query_after_where = query[start_index:]
+
+        res = re.sub(r"(?:and|or)?\s*data_source_type_id\s*(?:=\s*\d+|in\s*\(\s*\d+(?:\s*,\s*\d+)*\s*\))\s*(?:and|or)?","", query_after_where)
+        res = re.sub(r"\|\s*project\s+([^\|]+)", "" , res)
+        
+        return res.strip(" ")
+
+
+    def build_fields_dict(self, fields):
         stack = []
         current = {"logical operation": None, "operands": []}
 
+        fields.replace("matches regex" , "matches_regex")
+        
         tokens = re.findall(r'[^\s()]+|and|or|[()]', fields)
         operators_and_operands = []
         i = 0
@@ -129,75 +177,20 @@ class Query:
             raise ValueError("Unmatched parentheses in expression.")
 
         return current
-
-#--------------------------Functions-------------------------#
-
-    # TODO: implement after we'll get a fields mapping
-    def handle_project(self):
-        fields = set()
-
-        for pro in self.project:
-            column = kql_field_mapping.get(pro, None)
-            if column is None:
-                raise ValueError(f'ERROR: {pro} column does not exist in table: {self.table}.')
-            fields.add(column)
-
-        return fields
+    
 
 
 
-    def handle_data_source(self):
-        products = set()
-        services = set()
 
-        for num in self.data_source:
-
-            collected_products = {kql_product_mapping[num]} if num in kql_product_mapping else set()
-
-            if num in kql_service_mapping:
-                value = kql_service_mapping[num]
-                collected_services = set(value) if isinstance(value, list) else {value}
-            else:
-                collected_services = set()
-
-            if not collected_products and not collected_services:
-                print(f"ERROR: the number {num} did not match any key in either mapping!")
-                break
-
-            products = products.union(collected_products)
-            services = services.union(collected_services)
-
-        return products, services
-
-    def handle_field(self):
-        
-        detection = self.fields.copy()
-        for key,value in detection:
-            if key == 'operands' :
-                for tup in value:
-                    tup[0] = kql_field_mapping.get(tup[0], None)
-        
-        return detection
-
-    def parse_to_rule(self):
-
-        mapped_project = self.handle_project()
-        mapped_data_source = self.handle_data_source()
-        mapped_fields = self.handle_field()
-
-        rule = GenarateRule(mapped_project, mapped_data_source, mapped_fields)
-        
-        return rule.finalize_rule()
-
-
-#TESTING TEMPORARY
-query = ("events_all\n| project Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'")
+#------------------------TESTING (TEMPORARY)----------------------#
+query = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'")
 parse_query = Query(query)
-print(parse_query.table)
-print(parse_query.project)
-print(parse_query.data_source)
-print(parse_query.fields)
-parse_query.parse_to_rule()
+print(parse_query.handle_project())
+print(parse_query.handle_data_source())
+print(parse_query.handle_field())
+print(type(parse_query.handle_project()))
+print(type(parse_query.handle_data_source()))
+print(type(parse_query.handle_field()))
 # events_all
 # | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'
 #

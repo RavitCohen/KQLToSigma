@@ -2,27 +2,44 @@ import re
 from mapping.products import kql_product_mapping
 from mapping.services import kql_service_mapping
 
-query = """events_all
-| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'
-| project _User
-| where _eventName endswith 'Configuration'
-| project _User, _eventSource
-"""
-
-new_query = re.sub(r"^[^\|]*\|", "", query, count=1)
-new_query = re.sub(r"\|?\s*project[^\n]*\n?", "", new_query)
-new_query = re.sub(r"data_source_type_id\s*(=|in)\s*\([^\)]+\|\s*\d+\)\s*and?\s*", "", new_query)
-print(new_query)
 
 
+query = "events_all| project _Hashes | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'  | project 'hi' , 'n' "
+
+def extract_fields(query):
+    start_index = query.find("where") + len("where")
+
+    if start_index == -1 : 
+        return ""
+    else :
+        query_after_where = query[start_index:]
+
+    res = re.sub(r"(?:and|or)?\s*data_source_type_id\s*(?:=\s*\d+|in\s*\(\s*\d+(?:\s*,\s*\d+)*\s*\))\s*(?:and|or)?",
+                     "", query_after_where)
+    res = re.sub(r"\|\s*project\s+([^\|]+)", "" , res)
+    
+    return res.strip(" ")
+
+
+print(extract_fields(query))
 
 
 
 
-
-
-
-
+    # def extract_project(self, query):
+    #     regex = r"(?<=\|)\s*project\s+([^\|]+)"
+    #     matches = re.findall(regex, query)
+    #     if not matches:
+    #         raise ValueError("Illegal input: Expected a project.")
+    #     project = []
+    #     for match in matches:
+    #         col_to_check = [col.strip() for col in match.split(',')]
+    #         print (col_to_check)
+    #         if "" in col_to_check:
+    #             raise ValueError("Illegal input: Expected a project.")
+    #         project.extend(col_to_check)
+    #
+    #     return project
 
 
 
