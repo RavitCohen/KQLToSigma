@@ -392,7 +392,7 @@ logsource:
 detection:
     selection_user:
         USER:
-            - '#-*'            
+            -  '#-*'
             - '#*4294967295'    
     condition: selection_user
   
@@ -525,7 +525,10 @@ QUESTION
 
 
 events_all
-| where data_source_type_id=11 and (file_name =~ 'bash' and dir_path endswith '/bin') and (not(((_ in ('127.0.0.1', '0.0.0.0')) or (i in ('127.0.0.1', '0.0.0.0')) or (p in ('127.0.0.1', '0.0.0.0')) or (v in ('127.0.0.1', '0.0.0.0')) or (4 in ('127.0.0.1', '0.0.0.0')))))",
+| where data_source_type_id=11 and (file_name =~ 'bash' and dir_path endswith '/bin') and (not(((_ in ('127.0.0.1', '0.0.0.0')) or (i in ('127.0.0.1', '0.0.0.0')) o
+
+
+r (p in ('127.0.0.1', '0.0.0.0')) or (v in ('127.0.0.1', '0.0.0.0')) or (4 in ('127.0.0.1', '0.0.0.0')))))",
         
 logsource:
     product: linux
@@ -698,7 +701,7 @@ detection:
 
 
 events_all
-| where data_source_type_id=11 and ((file_name =~ 'dd' and dir_path =~ '/bin') or (file_name =~ 'dd' and dir_path =~ '/usr/bin')) 
+| where data_source_type_id=11 and ((file_name =~ 'dd' ) or (file_name =~ 'dd' ))
                                 and _CommandLine contains 'of=' 
                                 and (_CommandLine contains 'if=/dev/zero' or _CommandLine contains 'if=/dev/null')",
         

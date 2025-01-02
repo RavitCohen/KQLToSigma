@@ -99,10 +99,26 @@ class Query:
         return products, services
 
 
-    def map_field(self):
-        detection = self.fields.copy()
-        detection["operands"] = [(kql_field_mapping.get(t[0], t[0]), t[1], t[2]) for t in detection["operands"]]
-        return detection
+    def map_field(self, data):
+        if isinstance(data, dict):
+            return {key: self.map_field(value) if key == 'operands' else value
+                    for key, value in data.items()}
+        elif isinstance(data, list):
+            return [self.map_field(item) for item in data]
+        elif isinstance(data, tuple):
+            if data[0] in kql_field_mapping:
+                return kql_field_mapping[data[0]], *data[1:]
+        return data
+
+
+
+# def map_field(self, detection):
+#         for t in detection["operands"]:
+#             if type(t) is tuple:
+#                 detection["operands"].append((kql_field_mapping.get(t[0], t[0]), t[1], t[2]))
+#             else:
+#                 self.map_field(t)
+#         return detection
 
 
 #--------------------------Functions--------------------------#
@@ -112,7 +128,7 @@ class Query:
 
         mapped_project = self.map_project()
         mapped_data_source = self.map_data_source()
-        mapped_fields = self.map_field()
+        mapped_fields = self.map_field(self.fields.copy())
 
         rule = GenerateRule(mapped_project, mapped_data_source, mapped_fields)
         
@@ -130,7 +146,7 @@ class Query:
         else : 
             query_after_where = query[start_index:]
 
-        res = re.sub(r"(?:and|or)?\s*data_source_type_id\s*(?:=\s*\d+|in\s*\(\s*\d+(?:\s*,\s*\d+)*\s*\))\s*(?:and|or)?","", query_after_where)
+        res = re.sub(r"(?:and|or)?\s*data_source_type_id\s*(?:==\s*\d+|in\s*\(\s*\d+(?:\s*,\s*\d+)*\s*\))\s*(?:and|or)?","", query_after_where)
         res = re.sub(r"\|\s*project\s+([^\|]+)", "" , res)
         
         return res.strip(" ")
@@ -140,8 +156,10 @@ class Query:
         array_operator = ['in', 'in~' 'has_all']
         logical_op = ['and', 'or', '(', ')']
         stack = []
+
         current = {"logical operation": None, "operands": []}
 
+        fields.replace("matches regex", "matches_regex")
         tokens = re.findall(r'[^\s()]+|and|or|[()]', fields)
         operators_and_operands = []
         i = 0
@@ -196,16 +214,15 @@ class Query:
 #------------------------TESTING (TEMPORARY)----------------------#
 query = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'")
 query2 = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) ")
+query3= "events_all\n | where data_source_type_id==11 and _eventSource =~ 'lambda.amazonaws.com' and (_USER startswith '#-' or _USER matches_regex '\\#.*4294967295')"
 
-parse_query = Query(query)
+parse_query = Query(query3)
 print(parse_query.map_project())
 print(parse_query.map_data_source())
-print(parse_query.map_field())
+print(parse_query.fields)
+print(parse_query.map_field(parse_query.fields.copy()))
 
-parse_query2 = Query(query2)
-print(parse_query2.map_project())
-print(parse_query2.map_data_source())
-print(parse_query2.map_field())
+
 
 # events_all
 # | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'
