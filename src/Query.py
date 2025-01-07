@@ -206,26 +206,28 @@ class Query:
             raise ValueError("Unmatched parentheses in expression.")
 
         return current
-    
 
+
+def remove_extra_spaces(command_text):
+    return re.sub(r'\|\s+(\w+)', r'|\1', command_text)
 
 
 
 #------------------------TESTING (TEMPORARY)----------------------#
-query = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'")
-query2 = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) ")
-query3= "events_all\n | where data_source_type_id==11 and _eventSource =~ 'lambda.amazonaws.com' and (_USER startswith '#-' or _USER matches_regex '\\#.*4294967295')"
-
-parse_query = Query(query3)
-print(parse_query.map_project())
-print(parse_query.map_data_source())
-print(parse_query.fields)
-print(parse_query.map_field(parse_query.fields.copy()))
+# query = ("events_all\n| where data_source_type_id==11 and _CommandLine contains 'base64' and ((_CommandLine contains '|bash' or _CommandLine contains '|sh' or _CommandLine contains '|bash or _CommandLine contains '|sh') or (_CommandLine endswith '|sh' or _CommandLine endswith '|bash' or _CommandLine endswith '|sh' or _CommandLine endswith '|bash'))")
+#
+# # query2 = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) ")
+# # query3= "events_all\n | where data_source_type_id==11 and _eventSource =~ 'lambda.amazonaws.com' and (_USER startswith '#-' or _USER matches_regex '\\#.*4294967295')"
+#
+# parse_query = Query(query)
+# print(parse_query.map_project())
+# print(parse_query.map_data_source())
+# print(parse_query.fields)
 
 
 
 # events_all
-# | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and _eventName startswith 'UpdateFunctionConfiguration'
+# | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' or _eventName startswith 'UpdateFunctionConfiguration'
 #
 # logsource:
 #     product: aws
