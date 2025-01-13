@@ -21,7 +21,7 @@ class GenerateRule:
         self.mapped_fields = mapped_fields
 
         self.rule = {   "logsource": {"product": [], "service": []},
-                        "detection": {"condition": []},
+                        "detection": {"selection":{}, "condition": []},
                         "field": []}
 
 
