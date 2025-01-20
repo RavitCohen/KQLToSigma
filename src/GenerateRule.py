@@ -1,3 +1,5 @@
+from debugpy.common.timestamp import current
+
 selection_counter_and = 0
 selection_counter_or = 0
 
@@ -19,7 +21,7 @@ class GenerateRule:
         self.mapped_fields = mapped_fields
 
         self.rule = {   "logsource": {"product": [], "service": []},
-                        "detection": {"condition": []},
+                        "detection": {"selection":{}, "condition": []},
                         "field": []}
 
 
@@ -38,6 +40,7 @@ class GenerateRule:
         
     def assign_fields(self):
         selection_counter_and=0
+        current_operator = None
 
         my_dict = self.mapped_fields
         if my_dict['logical operation'] == 'and':
@@ -73,10 +76,10 @@ class GenerateRule:
             else:
                 print(f"{spacing * indent}{key}: {value}")
 
-
-rule = GenerateRule('Hashes',('aws', 'cloudtrail'),{'logical operation': 'and', 'operands': [('eventSource', '=~', "'lambda.amazonaws.com'"), {'eventName': 'startswith'}]})
+query = ("events_all\n| where data_source_type_id==11 and _CommandLine contains 'base64' and ((_CommandLine contains '|bash' or _CommandLine contains '|sh' or _CommandLine contains '|bash or _CommandLine contains '|sh') or (_CommandLine endswith '|sh' or _CommandLine endswith '|bash' or _CommandLine endswith '|sh' or _CommandLine endswith '|bash'))")
+rule = GenerateRule(None,('aws', 'cloudtrail'),{'logical operation': 'and', 'operands': [('_CommandLine', 'contains', "'base64'"), {'logical operation': 'or', 'operands': [{'logical operation': 'or', 'operands': [('_CommandLine', 'contains', "'|bash'"), ('_CommandLine', 'contains', "'|sh'"), ('_CommandLine', 'contains', "'|bash"), ('_CommandLine', 'contains', "'|sh'")]}, {'logical operation': 'or', 'operands': [('_CommandLine', 'endswith', "'|sh'"), ('_CommandLine', 'endswith', "'|bash'"), ('_CommandLine', 'endswith', "'|sh'"), ('_CommandLine', 'endswith', "'|bash'")]}]}]})
 rule.finalize_rule()
-# print(rule.mapped_project)
-# print(rule.mapped_data_source)
+print(rule.mapped_project)
+print(rule.mapped_data_source)
 print(rule.mapped_fields)
 print(rule.pretty_print_dict(rule.rule))
