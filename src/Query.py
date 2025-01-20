@@ -123,20 +123,19 @@ class Query:
 
 #--------------------------Functions--------------------------#
 
-
     def parse_to_rule(self):
 
         mapped_project = self.map_project()
         mapped_data_source = self.map_data_source()
         mapped_fields = self.map_field(self.fields.copy())
 
-        rule = GenerateRule(mapped_project, mapped_data_source, mapped_fields)
+        my_rule = GenerateRule(mapped_project, mapped_data_source, mapped_fields).finalize_rule()
         
-        return rule.finalize_rule()
+        return my_rule
+
     
 
 #-----------------------Helper Functions----------------------#
-
 
     def clean_unnecessary_data(self, query):
         start_index = query.find("where") + len("where")
@@ -154,31 +153,43 @@ class Query:
 
     def build_fields_dict(self, fields):
         array_operator = ['in', 'in~' 'has_all']
-        logical_op = ['and', 'or', '(', ')']
+        logical_op = ['and', 'or','(',')']
         stack = []
-
         current = {"logical operation": None, "operands": []}
 
-        fields.replace("matches regex", "matches_regex")
         tokens = re.findall(r'[^\s()]+|and|or|[()]', fields)
         operators_and_operands = []
         i = 0
         while i < len(tokens):
             if tokens[i] not in logical_op:
-                for_tuple = tokens[i: i + 2]
+                for_tuple = tokens[i: i+2]
                 if for_tuple[1] in array_operator:
                     counter = 1
                     res_string = ""
                     while counter + i < len(tokens) and tokens[counter + i] != ")":
                         counter += 1
-                        res_string += tokens[counter + i]
-                    i = counter + i + 1
+                        res_string += " " + tokens[counter+i]
+                    i = counter + i +1
                     for_tuple.append(res_string)
                     operators_and_operands.append(tuple(for_tuple))
                 else:
-                    for_tuple = tokens[i: i + 3]
-                    operators_and_operands.append(tuple(for_tuple))
-                    i = i + 3
+                    for_tuple = tokens[i: i + 2]
+                    to_check = tokens[i+2]
+                    if to_check.startswith("'") and not to_check.endswith("'") or to_check == "'":
+                        counter = 3
+                        res_string = to_check
+                        while counter + i < len(tokens) and not tokens[counter + i].endswith("'"):
+                            res_string += " " + tokens[counter + i]
+                            counter += 1
+                        if counter + i < len(tokens):
+                            res_string += " " + tokens[counter + i]
+                        i = counter + i + 1
+                        for_tuple.append(res_string)
+                        operators_and_operands.append(tuple(for_tuple))
+                    else:
+                        for_tuple = tokens[i: i + 3]
+                        operators_and_operands.append(tuple(for_tuple))
+                        i = i + 3
             else:
                 operators_and_operands.append(tokens[i])
                 i = i + 1
@@ -216,8 +227,6 @@ def pretty_print_dict(self, data, indent=0):
         else:
             print(f"{spacing * indent}{key}: {value}")
 
-def remove_extra_spaces(command_text):
-    return re.sub(r'\|\s+(\w+)', r'|\1', command_text)
 
 
 
@@ -250,14 +259,14 @@ def remove_extra_spaces(command_text):
 
 #------------------------EXAMPLE----------------------#
 
-query= "events_all\n| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and (_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider')"
-parse_query = Query(query)
-print(f' data source: {parse_query.map_data_source()}')
-print(f' fields: {parse_query.map_field(parse_query.fields.copy())}')
-
-'''fields: {'logical operation': 'or', 'operands': [{'logical operation': 'and',
-                                                  'operands': [('eventSource', '=~', "'sts.amazonaws.com'"),
-                                                               ('eventName', '=~', "'AssumeRoleWithSAML'")]},
-                                                 {'logical operation': 'and',
-                                                  'operands': [('eventSource', '=~', "'iam.amazonaws.com'"),
-                                                               ('eventName', '=~', "'UpdateSAMLProvider'")]}]}'''
+# query= "events_all\n| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and (_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider')"
+# parse_query = Query(query)
+# print(f' data source: {parse_query.map_data_source()}')
+# print(f' fields: {parse_query.map_field(parse_query.fields.copy())}')
+#
+# '''fields: {'logical operation': 'or', 'operands': [{'logical operation': 'and',
+#                                                   'operands': [('eventSource', '=~', "'sts.amazonaws.com'"),
+#                                                                ('eventName', '=~', "'AssumeRoleWithSAML'")]},
+#                                                  {'logical operation': 'and',
+#                                                   'operands': [('eventSource', '=~', "'iam.amazonaws.com'"),
+#                                                                ('eventName', '=~', "'UpdateSAMLProvider'")]}]}'''

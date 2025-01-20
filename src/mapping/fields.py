@@ -60,81 +60,41 @@ field_mapping = {
     "_user_agent": "user_agent",
 }
 
-
+# Todo: handle with this specipic case
 file_and_dir_field_mapping = {
-    "CallerProcessName": DIR_PATH_FILE_NAME,
-    "FileName": DIR_PATH_FILE_NAME,
-    "Filename": DIR_PATH_FILE_NAME,
-    "HostApplication": DIR_PATH_FILE_NAME,
-    "Image": DIR_PATH_FILE_NAME,
-    "ImageLoaded": DIR_PATH_FILE_NAME,
-    "ImageName": DIR_PATH_FILE_NAME,
-    "ImagePath": DIR_PATH_FILE_NAME,
-    "Name": DIR_PATH_FILE_NAME,
-    "OriginalFileName": DIR_PATH_FILE_NAME,
-    "ParentImage": DIR_PATH_FILE_PARENT_NAME,
-    "Path": DIR_PATH_FILE_PARENT_NAME,
-    "ProcessName": DIR_PATH_FILE_NAME,
-    "ProcessPath": DIR_PATH_FILE_NAME,
-    "RelativeTargetName": DIR_PATH_FILE_NAME,
-    "Service": DIR_PATH_FILE_NAME,
-    "ServiceFileName": DIR_PATH_FILE_NAME,
-    "SourceFilename": DIR_PATH_FILE_NAME,
-    "SourceImage": DIR_PATH_FILE_NAME,
-    "StartModule": DIR_PATH_FILE_NAME,
-    "TargetFilename": DIR_PATH_FILE_NAME,
-    "TargetImage": DIR_PATH_FILE_NAME,
-    "name": DIR_PATH_FILE_NAME,
-    "path": DIR_PATH_FILE_NAME,
-    "process": DIR_PATH_FILE_NAME,
-    "processPath": DIR_PATH_FILE_NAME,
+    DIR_PATH_FILE_NAME: ["CallerProcessName","FileName","Filename", "HostApplication" , "Image", "ImageLoaded","ImageName","ImagePath", "Name", "OriginalFileName"],
+    DIR_PATH_FILE_PARENT_NAME: ["ParentImage", "Path", "ProcessName","ProcessPath", "RelativeTargetName", "Service", "ServiceFileName", "SourceFilename", "SourceImage", "StartModule", "TargetFilename", "TargetImage", "name", "path", "process", "processPath"]
 }
 
+# Todo: or between them
 ip_field_mapping = {
-    "Address": {
-        IPV4: ["_ipv4", "_dst_ipv4", "_src_ipv4"],
-        IPV6: ["_ipv6", "_dst_ipv6", "_src_ipv6"]
-    },
-    "DestinationIp": {
-        IPV4: ["_dst_ipv4"],
-        IPV6: ["_dst_ipv6"]
-    },
-    "IpAddress": {
-        IPV4: ["_ipv4", "_dst_ipv4", "_src_ipv4"],
-        IPV6: ["_ipv6", "_dst_ipv6", "_src_ipv6"],
-    },
-    "IPaddress": {
-        IPV4: ["_ipv4", "_dst_ipv4", "_src_ipv4"],
-        IPV6: ["_ipv6", "_dst_ipv6", "_src_ipv6"],
-    },
-    "dst_ip": {
-        IPV4: ["_dst_ipv4"],
-        IPV6: ["_dst_ipv6"]
-    },
-    "src_ip": {
-        IPV4: ["_src_ipv4"],
-        IPV6: ["_src_ipv6"]
-    }
+    "_ipv4": [ "Address", "IpAddress", "IPaddress"],
+    "_dst_ipv4": [ "Address", "DestinationIp", "IpAddress", "IPaddress", "dst_ip"],
+    "_src_ipv4": [ "Address", "IpAddress", "IPaddress", "src_ip"],
+    "_ipv6": ["Address", "IpAddress", "IPaddress"],
+    "_dst_ipv6": ["Address", "DestinationIp", "IpAddress", "IPaddress", "dst_ip"],
+    "_src_ipv6": ["Address", "IpAddress", "IPaddress", "src_ip"],
+
 }
 
- #ip_field_values = set(val for values in ip_field_mapping.values() for value in
+ # ip_field_values = set(val for values in ip_field_mapping.values() for value in
  #                      values.values() for val in value)
 
 string_value_field_mapping = {
-    "EventID": "_EventID",
-    "LogonType": "_LogonType",
+    "_EventID": "EventID",
+    "_LogonType": "LogonType",
 }
 
-list_str_value_field_mapping = [
-        "_Message",
-        "_Protocol"
-]
-
-list_int_value_field_mapping = [
-    "matchedTypes"
-]
-
-list_value_field_mapping = list_str_value_field_mapping + list_int_value_field_mapping
+# list_str_value_field_mapping = [
+#         "_Message",
+#         "_Protocol"
+# ]
+#
+# list_int_value_field_mapping = [
+#     "matchedTypes"
+# ]
+#
+# list_value_field_mapping = list_str_value_field_mapping + list_int_value_field_mapping
 
 kql_field_mapping = {
     **field_mapping, **string_value_field_mapping, **file_and_dir_field_mapping
