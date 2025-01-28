@@ -30,13 +30,15 @@ class Query:
     def extract_project(self, query):
         matches = re.findall(r"(?<=\|)\s*project\s+([^\|]+)", query)
         projects = []
+        print(matches)
         
         for match in matches:
             columns = [column.strip() for column in match.split(',')]
-            # if "" in col_to_check:
-            #     raise ValueError("Illegal input: Expected a project.")  TODO: (shira) to my opinion these line are not necessary
+            #if "" in col_to_check:
+             #   raise ValueError("Illegal input: Expected a project.")  #TODO: (shira) to my opinion these line are not necessary
             projects.extend(columns)                                     #TODO:  (QUESTION) is it ok to have multiple columns with same names?(legal)
 
+        print(projects)
         return projects
 
 
@@ -124,7 +126,6 @@ class Query:
         
         return my_rule
 
-    
 
 #-----------------------Helper Functions----------------------#
 
@@ -135,23 +136,23 @@ class Query:
         if start_index == -1 : 
             start_index = query.find("|") + 1
         else:
-            start_index = len("where")
+            start_index = start_index + len("where")
 
         query_after_where = query[start_index:]
 
         res = re.sub(r"(?:and|or)?\s*data_source_type_id\s*(?:==\s*\d+|in\s*\(\s*\d+(?:\s*,\s*\d+)*\s*\))\s*(?:and|or)?","", query_after_where)
         res = re.sub(r"\|\s*project\s+([^\|]+)", "" , res)
         
-        return res.strip(" ")
+        return res
 
 
     def build_fields_dict(self, fields):
-        array_operator = ['in', 'in~' 'has_all']
+        array_operator = ['in', 'in~', 'has_all']
         logical_op = ['and', 'or','(',')']
         stack = []
         current = {"logical operation": None, "operands": []}
 
-        fields.replace("matches regex" , "re")
+        fields.replace("matches regex" , "matches_regex")
         tokens = re.findall(r'[^\s()]+|and|or|[()]', fields)
         operators_and_operands = []
         i = 0
@@ -166,6 +167,7 @@ class Query:
                         res_string += " " + tokens[counter+i]
                     i = counter + i + 1
                     for_tuple.append(res_string)
+                    for_tuple[2] = for_tuple[2].strip("'")
                     operators_and_operands.append(tuple(for_tuple))
                 else:
                     for_tuple = tokens[i: i + 2]
@@ -180,9 +182,11 @@ class Query:
                             res_string += " " + tokens[counter + i]
                         i = counter + i + 1
                         for_tuple.append(res_string)
+                        for_tuple[2] = for_tuple[2].strip("'")
                         operators_and_operands.append(tuple(for_tuple))
                     else:
                         for_tuple = tokens[i: i + 3]
+                        for_tuple[2] = for_tuple[2].strip("'")
                         operators_and_operands.append(tuple(for_tuple))
                         i = i + 3
             else:
@@ -227,7 +231,7 @@ def pretty_print_dict(self, data, indent=0):
 
 #------------------------TESTING (TEMPORARY)----------------------#
 query = "events_all\n| _CommandLine contains 'base64' and _CommandLine contains '|bash' "
-# query = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) ")
+# query = ("events_all\n| project _Hashes | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) ")
 # query= "events_all\n| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and (_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider')"
 # #
 #parse_query = Query(query)

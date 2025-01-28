@@ -57,7 +57,7 @@ class GenerateRule:
 
         current_operator = None  # 1 = or , 0 = and
         selection_key = "selection"
-
+    
         # check logical operator and update operator_flag
         if mapped_fields["logical operation"] == "or":
             current_operator = 1
