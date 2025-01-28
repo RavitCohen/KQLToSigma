@@ -1,4 +1,4 @@
-from debugpy.common.timestamp import current
+
 
 selection_counter = 1
 acc_condition = ""
@@ -33,12 +33,22 @@ class GenerateRule:
 
     def assign_project(self, mapped_project):
         self.rule["field"] = mapped_project
+        
+        if not mapped_project:
+            delete_from_dict(self.rule, "field")
 
 
     def assign_logsource(self, mapped_data_source):
         products, services = mapped_data_source
         self.rule["logsource"]["product"] = products
         self.rule["logsource"]["service"] = services
+        
+        if not products:
+            delete_from_dict(self.rule["logsource"], "product")
+        if not services:
+            delete_from_dict(self.rule["logsource"], "service") 
+        if not products and not services:
+            delete_from_dict(self.rule, "logsource")   
 
 
     def assign_fields(self, mapped_fields):
@@ -84,12 +94,22 @@ class GenerateRule:
             else:
                 self.assign_fields(t)
 
-        # TODO: clean all selection that empty and move to genetarte rule
+        # TODO: clean all selection that empty and move to generate rule
 
 
     def finalize_rule(self):
         return self.rule
 
+
+#--------------------------------Helper Functions-------------------------------------#
+
+def delete_from_dict(dict, key):
+    del dict[key]
+    
+    
+    
+    
+    
 
     # def pretty_print_dict(self, data, indent=0):
     #     spacing = '    '  # Define the indentation size (4 spaces)

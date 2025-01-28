@@ -96,7 +96,7 @@ class Query:
             products = products.union(collected_products)
             services = services.union(collected_services)
 
-        return products, services
+        return list(products), list(services)
 
 
     def map_field(self, data):
@@ -110,15 +110,6 @@ class Query:
                 return kql_field_mapping[data[0]], *data[1:]
         return data
 
-
-
-# def map_field(self, detection):
-#         for t in detection["operands"]:
-#             if type(t) is tuple:
-#                 detection["operands"].append((kql_field_mapping.get(t[0], t[0]), t[1], t[2]))
-#             else:
-#                 self.map_field(t)
-#         return detection
 
 
 #--------------------------Functions--------------------------#
@@ -138,12 +129,15 @@ class Query:
 #-----------------------Helper Functions----------------------#
 
     def clean_unnecessary_data(self, query):
-        start_index = query.find("where") + len("where")
+        
+        start_index = query.find("where")
 
         if start_index == -1 : 
-            return ""
-        else : 
-            query_after_where = query[start_index:]
+            start_index = query.find("|") + 1
+        else:
+            start_index = len("where")
+
+        query_after_where = query[start_index:]
 
         res = re.sub(r"(?:and|or)?\s*data_source_type_id\s*(?:==\s*\d+|in\s*\(\s*\d+(?:\s*,\s*\d+)*\s*\))\s*(?:and|or)?","", query_after_where)
         res = re.sub(r"\|\s*project\s+([^\|]+)", "" , res)
@@ -157,6 +151,7 @@ class Query:
         stack = []
         current = {"logical operation": None, "operands": []}
 
+        fields.replace("matches regex" , "re")
         tokens = re.findall(r'[^\s()]+|and|or|[()]', fields)
         operators_and_operands = []
         i = 0
@@ -169,7 +164,7 @@ class Query:
                     while counter + i < len(tokens) and tokens[counter + i] != ")":
                         counter += 1
                         res_string += " " + tokens[counter+i]
-                    i = counter + i +1
+                    i = counter + i + 1
                     for_tuple.append(res_string)
                     operators_and_operands.append(tuple(for_tuple))
                 else:
@@ -231,28 +226,18 @@ def pretty_print_dict(self, data, indent=0):
 
 
 #------------------------TESTING (TEMPORARY)----------------------#
-# query = ("events_all\n| where data_source_type_id==11 and _CommandLine contains 'base64' and ((_CommandLine contains '|bash' or _CommandLine contains '|sh' or _CommandLine contains '|bash' or _CommandLine contains '|sh') or (_CommandLine endswith '|sh' or _CommandLine endswith '|bash' or _CommandLine endswith '|sh' or _CommandLine endswith '|bash'))")
+query = "events_all\n| _CommandLine contains 'base64' and _CommandLine contains '|bash' "
 # query = ("events_all\n| project _Hashes \n | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) ")
 # query= "events_all\n| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and (_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider')"
 # #
-# parse_query = Query(query)
-# print(parse_query.map_project())
-# print(parse_query.map_data_source())
-# print(parse_query.map_field(parse_query.fields.copy()))
+#parse_query = Query(query)
+#print(parse_query.map_field(parse_query.fields.copy()))
 
 
 
 # events_all
 # | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' or _eventName startswith 'UpdateFunctionConfiguration'
-#
-# logsource:
-#     product: aws
-#     service: ..
-# detection:
-#     selection:
-#         eventSource: lambda.amazonaws.com
-#         eventName|startswith: 'UpdateFunctionConfiguration'
-#     condition: selection
+
 
 
 
