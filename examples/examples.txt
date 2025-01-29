@@ -251,24 +251,7 @@ and
 or
 (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider'))
 
-title: AWS Suspicious SAML Activity
-id: f43f5d2f-3f2a-4cc8-b1af-81fde7dbaf0e
-status: test
-description: Identifies when suspicious SAML activity has occurred in AWS. An adversary could gain backdoor access via SAML.
-references:
-    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_UpdateSAMLProvider.html
-    - https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithSAML.html
-author: Austin Songer
-date: 2021/09/22
-modified: 2022/12/18
-tags:
-    - attack.initial_access
-    - attack.t1078
-    - attack.lateral_movement
-    - attack.t1548
-    - attack.privilege_escalation
-    - attack.t1550
-    - attack.t1550.001
+
 logsource:
     product: aws
     service: cloudtrail
@@ -892,44 +875,44 @@ STOP
         "sigma_rule": "title: Vim GTFOBin Abuse - Linux\nid: 7ab8f73a-fcff-428b-84aa-6a5ff7877dea\nstatus: experimental\ndescription: Detects usage of \"vim\" and it's siblings as a GTFOBin to execute and proxy command and binary execution\nreferences:\n    - https://gtfobins.github.io/gtfobins/vim/\n    - https://gtfobins.github.io/gtfobins/rvim/\n    - https://gtfobins.github.io/gtfobins/vimdiff/\nauthor: Nasreddine Bencherchali (Nextron Systems)\ndate: 2022/12/28\ntags:\n    - attack.discovery\n    - attack.t1083\nlogsource:\n    category: process_creation\n    product: linux\ndetection:\n    selection_img:\n        Image|endswith:\n            - '/vim'\n            - '/rvim'\n            - '/vimdiff'\n        CommandLine|contains:\n            - ' -c '\n            - ' --cmd'\n    selection_cli:\n        CommandLine|contains:\n            - ':!/'\n            - ':py '\n            - ':lua '\n            - '/bin/sh'\n            - '/bin/bash'\n            - '/bin/dash'\n            - '/bin/zsh'\n            - '/bin/fish'\n    condition: all of selection_*\nfalsepositives:\n    - Unknown\nlevel: high\n",
         "warnings": null
     },
-    {
-        "category": "process_creation",
-        "description": "Detects known hacktool execution based on image name",
-        "detection": {
-            "condition": "selection",
-            "selection": {
-                "Image|contains": "/linpeas",
-                "Image|endswith": [
-                    "/sqlmap",
-                    "/teamserver",
-                    "/aircrack-ng",
-                    "/john",
-                    "/setoolkit",
-                    "/wpscan",
-                    "/hydra",
-                    "/nikto",
-                    "/ebpfkit",
-                    "/bpfdos",
-                    "/exechijack",
-                    "/pidhide",
-                    "/writeblocker"
-                ]
-            }
-        },
-        "error": {
-            "code": "NO_ERROR",
-            "message": ""
-        },
-        "external_link": "https://github.com/SigmaHQ/sigma/tree/master/rules/linux/process_creation/proc_creation_lnx_hack_tools.yml",
-        "id": "sigma-a015e032-146d-4717-8944-7a1884122111",
-        "name": "Linux HackTool Execution",
-        "origin": "sigma",
-        "product": "linux",
-        "pysigma_kql": "events_all\n| where data_source_type_id=11 and ((file_name endswith 'sqlmap' or file_name endswith 'teamserver' or file_name endswith 'aircrack-ng' or file_name endswith 'john' or file_name endswith 'setoolkit' or file_name endswith 'wpscan' or file_name endswith 'hydra' or file_name endswith 'nikto' or file_name endswith 'ebpfkit' or file_name endswith 'bpfdos' or file_name endswith 'exechijack' or file_name endswith 'pidhide' or file_name endswith 'writeblocker') or file_name contains 'linpeas')",
-        "service": null,
-        "sigma_rule": "title: Linux HackTool Execution\nid: a015e032-146d-4717-8944-7a1884122111\nstatus: experimental\ndescription: Detects known hacktool execution based on image name\nreferences:\n    - Internal Research\n    - https://github.com/Gui774ume/ebpfkit\n    - https://github.com/pathtofile/bad-bpf\n    - https://github.com/carlospolop/PEASS-ng\nauthor: Nasreddine Bencherchali (Nextron Systems)\ndate: 2023/01/03\nmodified: 2023/01/31\ntags:\n    - attack.execution\nlogsource:\n    product: linux\n    category: process_creation\ndetection:\n    selection:\n        - Image|endswith:\n            # Add more as you see fit\n            - '/sqlmap'\n            - '/teamserver'\n            - '/aircrack-ng'\n            - '/john'\n            - '/setoolkit'\n            - '/wpscan'\n            - '/hydra'\n            - '/nikto'\n            # eBPF related malicious tools/poc's\n            - '/ebpfkit'\n            - '/bpfdos'\n            - '/exechijack'\n            - '/pidhide'\n            - '/writeblocker'\n        - Image|contains: '/linpeas'\n    condition: selection\nfalsepositives:\n    - Unlikely\nlevel: high\n",
-        "warnings": null
-    },
+
+
+
+
+
+
+
+        events_all
+        | where data_source_type_id=11 and 
+        ((file_name endswith 'sqlmap' or file_name endswith 'teamserver' or file_name endswith 'aircrack-ng' or file_name endswith 'john' or file_name endswith 'setoolkit' or file_name endswith 'wpscan' or file_name endswith 'hydra' or file_name endswith 'nikto' or file_name endswith 'ebpfkit' or file_name endswith 'bpfdos' or file_name endswith 'exechijack' or file_name endswith 'pidhide' or file_name endswith 'writeblocker') or file_name contains 'linpeas')",
+        
+        
+        logsource:
+            product: linux
+            selection:
+                    - Image|endswith:            
+                        - '/sqlmap'
+                        - '/teamserver'
+                        - '/aircrack-ng'
+                        - '/john'
+                        - '/setoolkit' 
+                        - '/wpscan'
+                        - '/hydra'
+                        - '/nikto'
+                        - '/ebpfkit'
+                        - '/bpfdos'
+                        - '/exechijack'            
+                        - '/pidhide'\n            
+                        - '/writeblocker'\n        
+                    - Image|contains: '/linpeas'   
+            condition: selection
+        
+    
+
+
+
+
+
     {
         "category": "process_creation",
         "description": "Detects installation of new certificate on the system which attackers may use to avoid warnings when connecting to controlled web servers or C2s",
@@ -956,62 +939,66 @@ STOP
         "sigma_rule": "title: Install Root Certificate\nid: 78a80655-a51e-4669-bc6b-e9d206a462ee\nstatus: test\ndescription: Detects installation of new certificate on the system which attackers may use to avoid warnings when connecting to controlled web servers or C2s\nreferences:\n    - https://github.com/redcanaryco/atomic-red-team/blob/f339e7da7d05f6057fdfcdd3742bfcf365fee2a9/atomics/T1553.004/T1553.004.md\nauthor: \u00d6mer G\u00fcnal, oscd.community\ndate: 2020/10/05\nmodified: 2022/07/07\ntags:\n    - attack.defense_evasion\n    - attack.t1553.004\nlogsource:\n    product: linux\n    category: process_creation\ndetection:\n    selection:\n        Image|endswith:\n            - '/update-ca-certificates'\n            - '/update-ca-trust'\n    condition: selection\nfalsepositives:\n    - Legitimate administration activities\nlevel: low\n",
         "warnings": null
     },
-    {
-        "category": "process_creation",
-        "description": "Detects installation of suspicious packages using system installation utilities",
-        "detection": {
-            "condition": "1 of selection_tool_* and selection_keyword",
-            "selection_keyword": {
-                "CommandLine|contains": [
-                    "nmap",
-                    " nc",
-                    "netcat",
-                    "wireshark",
-                    "tshark",
-                    "openconnect",
-                    "proxychains"
-                ]
-            },
-            "selection_tool_apt": {
-                "CommandLine|contains": "install",
-                "Image|endswith": [
-                    "/apt",
-                    "/apt-get"
-                ]
-            },
-            "selection_tool_dpkg": {
-                "CommandLine|contains": [
-                    "--install",
-                    "-i"
-                ],
-                "Image|endswith": "/dpkg"
-            },
-            "selection_tool_rpm": {
-                "CommandLine|contains": "-i",
-                "Image|endswith": "/rpm"
-            },
-            "selection_tool_yum": {
-                "CommandLine|contains": [
-                    "localinstall",
-                    "install"
-                ],
-                "Image|endswith": "/yum"
-            }
-        },
-        "error": {
-            "code": "NO_ERROR",
-            "message": ""
-        },
-        "external_link": "https://github.com/SigmaHQ/sigma/tree/master/rules/linux/process_creation/proc_creation_lnx_install_suspicioua_packages.yml",
-        "id": "sigma-700fb7e8-2981-401c-8430-be58e189e741",
-        "name": "Suspicious Package Installed - Linux",
-        "origin": "sigma",
-        "product": "linux",
-        "pysigma_kql": "events_all\n| where data_source_type_id=11 and (((file_name endswith 'apt' or file_name endswith 'apt-get') and _CommandLine contains 'install') or (file_name endswith 'yum' and (_CommandLine contains 'localinstall' or _CommandLine contains 'install')) or (file_name endswith 'rpm' and _CommandLine contains '-i') or (file_name endswith 'dpkg' and (_CommandLine contains '--install' or _CommandLine contains '-i'))) and (_CommandLine contains 'nmap' or _CommandLine contains ' nc' or _CommandLine contains 'netcat' or _CommandLine contains 'wireshark' or _CommandLine contains 'tshark' or _CommandLine contains 'openconnect' or _CommandLine contains 'proxychains')",
-        "service": null,
-        "sigma_rule": "title: Suspicious Package Installed - Linux\nid: 700fb7e8-2981-401c-8430-be58e189e741\nstatus: experimental\ndescription: Detects installation of suspicious packages using system installation utilities\nreferences:\n    - https://gist.githubusercontent.com/MichaelKoczwara/12faba9c061c12b5814b711166de8c2f/raw/e2068486692897b620c25fde1ea258c8218fe3d3/history.txt\nauthor: Nasreddine Bencherchali (Nextron Systems)\ndate: 2023/01/03\ntags:\n    - attack.defense_evasion\n    - attack.t1553.004\nlogsource:\n    product: linux\n    category: process_creation\ndetection:\n    selection_tool_apt:\n        Image|endswith:\n            - '/apt'\n            - '/apt-get'\n        CommandLine|contains: 'install'\n    selection_tool_yum:\n        Image|endswith: '/yum'\n        CommandLine|contains:\n            - 'localinstall'\n            - 'install'\n    selection_tool_rpm:\n        Image|endswith: '/rpm'\n        CommandLine|contains: '-i'\n    selection_tool_dpkg:\n        Image|endswith: '/dpkg'\n        CommandLine|contains:\n            - '--install'\n            - '-i'\n    selection_keyword:\n        CommandLine|contains:\n            # Add more suspicious packages\n            - 'nmap'\n            - ' nc'\n            - 'netcat'\n            - 'wireshark'\n            - 'tshark'\n            - 'openconnect'\n            - 'proxychains'\n    condition: 1 of selection_tool_* and selection_keyword\nfalsepositives:\n    - Legitimate administration activities\nlevel: medium\n",
-        "warnings": null
-    },
+    
+
+
+
+
+
+
+
+
+
+        events_all
+        | where data_source_type_id=11 and 
+            (((file_name endswith 'apt' or file_name endswith 'apt-get') and _CommandLine contains 'install') 
+            or (file_name endswith 'yum' and (_CommandLine contains 'localinstall' or _CommandLine contains 'install')) 
+            or (file_name endswith 'rpm' and _CommandLine contains '-i') 
+            or (file_name endswith 'dpkg' and (_CommandLine contains '--install' or _CommandLine contains '-i'))) 
+        and (_CommandLine contains 'nmap' or _CommandLine contains ' nc' or _CommandLine contains 'netcat' or _CommandLine contains 'wireshark' or _CommandLine contains 'tshark' or _CommandLine contains 'openconnect' or _CommandLine contains 'proxychains')
+        
+        logsource:
+            product: linux
+            detection:
+                selection_tool_apt:
+                    Image|endswith:            
+                        - '/apt'\n            
+                        - '/apt-get'\n       
+                    CommandLine|contains: 'install'\n   
+                
+                selection_tool_yum:\n        
+                    Image|endswith: '/yum'\n        
+                    CommandLine|contains:\n            
+                        - 'localinstall'\n            
+                        - 'install'\n    
+                selection_tool_rpm:\n        
+                    Image|endswith: '/rpm'\n        
+                    CommandLine|contains: '-i'\n    
+                selection_tool_dpkg:\n        
+                    Image|endswith: '/dpkg'\n        
+                    CommandLine|contains:\n            
+                        - '--install'\n            
+                        - '-i'\n    selection_keyword:\n        
+                    CommandLine|contains:\n           
+                        - 'nmap'\n            
+                        - ' nc'\n            
+                        - 'netcat'\n            
+                        - 'wireshark'\n            
+                        - 'tshark'\n            
+                        - 'openconnect'\n            
+                        - 'proxychains'\n    
+                    condition: 1 of selection_tool_* and selection_keyword
+        
+   
+
+
+
+
+
+
+
+
+
     {
         "category": "process_creation",
         "description": "Detect use of iptables to flush all firewall rules, tables and chains and allow all network traffic",

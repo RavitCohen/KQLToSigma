@@ -74,7 +74,7 @@ class Query:
                 raise ValueError(f'ERROR: column : {pro} does not exist in table: {self.table}.')
             fields.add(column)
 
-        return fields
+        return list(fields)
 
 
     def map_data_source(self):
