@@ -103,30 +103,22 @@ class GenerateRule:
 
 #--------------------------------Helper Functions-------------------------------------#
 
+
+    def pretty_print_dict(self, data, indent=0):
+        spacing = '    '  # Define the indentation size (4 spaces)
+        for key, value in data.items():
+            if isinstance(value, dict):
+                print(f"{spacing * indent}{key}:")
+                self.pretty_print_dict(value, indent + 1)
+            else:
+                print(f"{spacing * indent}{key}: {value}")
+
 def delete_from_dict(dict, key):
     del dict[key]
-    
-    
-    
-    
-    
 
-    # def pretty_print_dict(self, data, indent=0):
-    #     spacing = '    '  # Define the indentation size (4 spaces)
-    #     for key, value in data.items():
-    #         if isinstance(value, dict):
-    #             print(f"{spacing * indent}{key}:")
-    #             self.pretty_print_dict(value, indent + 1)
-    #         else:
-    #             print(f"{spacing * indent}{key}: {value}")
 
 # query = ("events_all\n| where data_source_type_id==11 and _CommandLine contains 'base64' and ((_CommandLine contains '| bash' or _CommandLine contains '| sh' or _CommandLine contains '|bash or _CommandLine contains '|sh') or (_CommandLine endswith '|sh' or _CommandLine endswith '|bash' or _CommandLine endswith '|sh' or _CommandLine endswith '|bash'))")
-# print(query.mapped_fields())
-# rule = GenerateRule(None,('aws', 'cloudtrail'),{'logical operation': 'and', 'operands': [('_CommandLine', 'contains', "'base64'"), {'logical operation': 'or', 'operands': [{'logical operation': 'or', 'operands': [('_CommandLine', 'contains', "'|bash'"), ('_CommandLine', 'contains', "'|sh'"), ('_CommandLine', 'contains', "'|bash"), ('_CommandLine', 'contains', "'|sh'")]}, {'logical operation': 'or', 'operands': [('_CommandLine', 'endswith', "'|sh'"), ('_CommandLine', 'endswith', "'|bash'"), ('_CommandLine', 'endswith', "'|sh'"), ('_CommandLine', 'endswith', "'|bash'")]}]}]})
 # rule.finalize_rule()
-# print(rule.mapped_project)
-# print(rule.mapped_data_source)
-# print(rule.mapped_fields)
 # print(rule.rule)
 # print(rule.pretty_print_dict(rule.rule))
 

@@ -30,15 +30,13 @@ class Query:
     def extract_project(self, query):
         matches = re.findall(r"(?<=\|)\s*project\s+([^\|]+)", query)
         projects = []
-        print(matches)
-        
+
         for match in matches:
             columns = [column.strip() for column in match.split(',')]
             #if "" in col_to_check:
              #   raise ValueError("Illegal input: Expected a project.")  #TODO: (shira) to my opinion these line are not necessary
             projects.extend(columns)                                     #TODO:  (QUESTION) is it ok to have multiple columns with same names?(legal)
 
-        print(projects)
         return projects
 
 
@@ -147,86 +145,105 @@ class Query:
 
 
     def build_fields_dict(self, fields):
-        array_operator = ['in', 'in~', 'has_all']
+        #defenitions:
         logical_op = ['and', 'or','(',')']
-        stack = []
-        current = {"logical operation": None, "operands": []}
-
-        fields.replace("matches regex" , "matches_regex")
-        tokens = re.findall(r'[^\s()]+|and|or|[()]', fields)
         operators_and_operands = []
         i = 0
-        while i < len(tokens):
+
+        # Dealing with an option whose field consists of two words
+        self.fix_fileds_two_word(fields)
+
+        tokens = re.findall(r'[^\s()]+|and|or|[()]', fields)
+        len_tokens = len(tokens)
+
+        while i < len_tokens:
             if tokens[i] not in logical_op:
-                for_tuple = tokens[i: i+2]
-                if for_tuple[1] in array_operator:
-                    counter = 1
-                    res_string = ""
-                    while counter + i < len(tokens) and tokens[counter + i] != ")":
-                        counter += 1
-                        res_string += " " + tokens[counter+i]
-                    i = counter + i + 1
-                    for_tuple.append(res_string)
-                    for_tuple[2] = for_tuple[2].strip("'")
-                    operators_and_operands.append(tuple(for_tuple))
-                else:
-                    for_tuple = tokens[i: i + 2]
-                    to_check = tokens[i+2]
-                    if to_check.startswith("'") and not to_check.endswith("'") or to_check == "'":
-                        counter = 3
-                        res_string = to_check
-                        while counter + i < len(tokens) and not tokens[counter + i].endswith("'"):
-                            res_string += " " + tokens[counter + i]
-                            counter += 1
-                        if counter + i < len(tokens):
-                            res_string += " " + tokens[counter + i]
-                        i = counter + i + 1
-                        for_tuple.append(res_string)
-                        for_tuple[2] = for_tuple[2].strip("'")
-                        operators_and_operands.append(tuple(for_tuple))
-                    else:
-                        for_tuple = tokens[i: i + 3]
-                        for_tuple[2] = for_tuple[2].strip("'")
-                        operators_and_operands.append(tuple(for_tuple))
-                        i = i + 3
-            else:
+                i, param_tuple = self.create_tuple_from_token(i, len_tokens, tokens)
+                operators_and_operands.append(tuple(param_tuple))
+            else: #tokens[i] in logical_op:
                 operators_and_operands.append(tokens[i])
                 i = i + 1
+
+        dict_logic = self.create_dict_logic(operators_and_operands)
+
+        return dict_logic
+
+
+#------------helper function--------------#
+    def fix_fileds_two_word(self, fields):
+        fields.replace("matches regex" , "matches_regex")
+
+    def create_tuple_from_token(self, i, len_tokens, tokens):
+        array_operator = ['in', 'in~', 'has_all']
+        param = tokens[i: i + 2]
+
+        if param[1] in array_operator:
+            counter = 1
+            res_string = ""
+            while counter + i < len_tokens and tokens[counter + i] != ")":
+                i, param = self.create_string_from_list(counter, res_string, param, len_tokens, tokens, i)
+
+        else: #param[1] not in array_operator
+            to_check = tokens[i + 2]
+            if to_check.startswith("'") and not to_check.endswith("'") or to_check == "'":
+                counter = 3
+                res_string = to_check
+                while counter + i < len_tokens and not tokens[counter + i].endswith("'"):
+                    i, param = self.create_string_from_list(counter, res_string, param, len_tokens, tokens, i)
+            else:
+                param = tokens[i: i + 3]
+                param[2] = param[2].strip("'")
+                i = i + 3
+
+            return i, tuple(param)
+
+    def create_string_from_list(self, counter, res_string, param, len_tokens, tokens, i):
+        res_string += " " + tokens[counter + i]
+        counter += 1
+        i = counter + i + 1
+        if counter + i < len_tokens:
+            res_string += " " + tokens[counter + i]
+        param.append(res_string)
+        param[2] = param[2].strip("'")
+        return i, param
+
+    def create_dict_logic(self, operators_and_operands):
+        dict_logic = {"logical operation": None, "operands": []}
+        stack = []
+
         for op in operators_and_operands:
             if op == "(":
                 # Push current context to stack and start a new one
-                stack.append(current)
-                current = {"logical operation": None, "operands": []}
+                stack.append(dict_logic)
+                dict_logic = {"logical operation": None, "operands": []}
             elif op == ")":
                 # Finish the current context and attach it to the parent
-                last = current
-                current = stack.pop()
-                current["operands"].append(last)
+                last = dict_logic
+                dict_logic = stack.pop()
+                dict_logic["operands"].append(last)
             elif op in {"and", "or"}:
                 # Set the operator
-                if current["logical operation"] is None:
-                    current["logical operation"] = op
-                elif current["logical operation"] != op:
+                if dict_logic["logical operation"] is None:
+                    dict_logic["logical operation"] = op
+                elif dict_logic["logical operation"] != op:
                     raise ValueError("Mixed operators without parentheses are not allowed.")
             else:
                 # It's an operand (e.g., a, b, c)
-                current["operands"].append(op)
-
+                dict_logic["operands"].append(op)
         if stack:
             raise ValueError("Unmatched parentheses in expression.")
 
-        return current
+        return dict_logic
 
-def pretty_print_dict(self, data, indent=0):
-    spacing = '    '  # Define the indentation size (4 spaces)
-    for key, value in data.items():
-        if isinstance(value, dict):
-            print(f"{spacing * indent}{key}:")
-            self.pretty_print_dict(value, indent + 1)
-        else:
-            print(f"{spacing * indent}{key}: {value}")
-
-
+#--------------delete after---------------
+    def pretty_print_dict(self, data, indent=0):
+        spacing = '    '  # Define the indentation size (4 spaces)
+        for key, value in data.items():
+            if isinstance(value, dict):
+                print(f"{spacing * indent}{key}:")
+                self.pretty_print_dict(value, indent + 1)
+            else:
+                print(f"{spacing * indent}{key}: {value}")
 
 
 #------------------------TESTING (TEMPORARY)----------------------#
@@ -234,7 +251,7 @@ query = "events_all\n| _CommandLine contains 'base64' and _CommandLine contains 
 # query = ("events_all\n| project _Hashes | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) ")
 # query= "events_all\n| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and (_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider')"
 # #
-#parse_query = Query(query)
+parse_query = Query(query)
 #print(parse_query.map_field(parse_query.fields.copy()))
 
 
