@@ -1,10 +1,6 @@
-events_all
-| project _User
-| where 
-
-(_fileName contains 'C:\\\\Windows\\\\' or _fileName contains 'C:\\\\Temp\\\\' or _fileName contains 'C:\\\\PerfLogs\\\\' or _fileName contains 'C:\\\\Users\\\\Public\\\\' or _fileName contains 'C:\\\\Users\\\\Default\\\\' or _fileName contains '\\\\Client\\\\' or _fileName contains '\\\\tsclient\\\\' or _fileName contains '\\\\inetpub\\\\' or _fileName contains '/www/' or _fileName contains 'apache' or _fileName contains 'tomcat' or _fileName contains 'nginx' or _fileName contains 'weblogic')
+events_all| where (_fileName contains 'C:\\\\Windows\\\\' or _fileName contains 'C:\\\\Temp\\\\' or _fileName contains 'C:\\\\PerfLogs\\\\' or _fileName contains 'C:\\\\Users\\\\Public\\\\' or _fileName contains 'C:\\\\Users\\\\Default\\\\' or _fileName contains '\\\\Client\\\\' or _fileName contains '\\\\tsclient\\\\' or _fileName contains '\\\\inetpub\\\\' or _fileName contains '/www/' or _fileName contains 'apache' or _fileName contains 'tomcat' or _fileName contains 'nginx' or _fileName contains 'weblogic')
         or (_fileName endswith '.asax' or _fileName endswith '.ashx' or _fileName endswith '.asmx' or _fileName endswith '.asp' or _fileName endswith '.aspx' or _fileName endswith '.bat' or _fileName endswith '.cfm' or _fileName endswith '.cgi' or _fileName endswith '.chm' or _fileName endswith '.cmd' or _fileName endswith '.dat' or _fileName endswith '.ear' or _fileName endswith '.gif' or _fileName endswith '.hta' or _fileName endswith '.jpeg' or _fileName endswith '.jpg' or _fileName endswith '.jsp' or _fileName endswith '.jspx' or _fileName endswith '.lnk' or _fileName endswith '.php' or _fileName endswith '.pl' or _fileName endswith '.png' or _fileName endswith '.ps1' or _fileName endswith '.psm1' or _fileName endswith '.py' or _fileName endswith '.pyc' or _fileName endswith '.rb' or _fileName endswith '.scf' or _fileName endswith '.sct' or _fileName endswith '.sh' or _fileName endswith '.svg' or _fileName endswith '.txt' or _fileName endswith '.vbe' or _fileName endswith '.vbs' or _fileName endswith '.war' or _fileName endswith '.wsf' or _fileName endswith '.wsh' or _fileName endswith '.xml')
-        
+| project _User        
         
 detection:
     selection_path:
@@ -285,7 +281,7 @@ condition: 1 of selection_*
 
 
 events_all
-| where \"_properties.message\" =~ 'Delete conditional access policy'
+| where _properties.message =~ 'Delete conditional access policy'
     
 detection:
     selection:
@@ -306,7 +302,7 @@ detection:
 
 
 events_all
-| where \"_properties.message\" in~ ('Update Application', 'Update Service principal')",
+| where _properties.message in~ ('Update Application', 'Update Service principal')",
         "service": "auditlogs",
 
 detection:
@@ -598,7 +594,7 @@ detection:
 
 
 events_all
-| where data_source_type_id=11 and (_CommandLine has_all ('echo 1 >', '/sys/kernel/debug/tracing/events/kprobes/')) and (_CommandLine contains '/myprobe/enable' or _CommandLine contains '/myretprobe/enable')",
+| where data_source_type_id==11 and (_CommandLine has_all ('echo 1 >', '/sys/kernel/debug/tracing/events/kprobes/')) and (_CommandLine contains '/myprobe/enable' or _CommandLine contains '/myretprobe/enable')",
         
 logsource:
     product: linux
@@ -666,7 +662,7 @@ detection:
 
 
 events_all
-| where data_source_type_id=11 and file_parent_name endswith '\\\\bash' 
+| where data_source_type_id==11 and file_parent_name endswith '\\\\bash' 
                                 and (_CommandLine contains 'id -Gn `' or _CommandLine contains 'id -Gn ''')",
         
 logsource:

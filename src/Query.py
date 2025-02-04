@@ -145,14 +145,15 @@ class Query:
         
         return res
 
-
+    
     def build_fields_dict(self, fields):
+        should_pop = 0
         array_operator = ['in', 'in~', 'has_all']
         logical_op = ['and', 'or','(',')']
         stack = []
         current = {"logical operation": None, "operands": []}
 
-        fields.replace("matches regex" , "matches_regex")
+        fields = fields.replace("matches regex" , "matches_regex")
         tokens = re.findall(r'[^\s()]+|and|or|[()]', fields)
         operators_and_operands = []
         i = 0
@@ -160,6 +161,9 @@ class Query:
             if tokens[i] not in logical_op:
                 for_tuple = tokens[i: i+2]
                 if for_tuple[1] in array_operator:
+                    should_pop = 1
+                    if operators_and_operands: 
+                        operators_and_operands.pop() #added
                     counter = 1
                     res_string = ""
                     while counter + i < len(tokens) and tokens[counter + i] != ")":
@@ -190,8 +194,10 @@ class Query:
                         operators_and_operands.append(tuple(for_tuple))
                         i = i + 3
             else:
-                operators_and_operands.append(tokens[i])
+                if not should_pop:
+                    operators_and_operands.append(tokens[i])
                 i = i + 1
+                should_pop = 0
         for op in operators_and_operands:
             if op == "(":
                 # Push current context to stack and start a new one
@@ -214,7 +220,7 @@ class Query:
 
         if stack:
             raise ValueError("Unmatched parentheses in expression.")
-
+        print(current)
         return current
 
 def pretty_print_dict(self, data, indent=0):
@@ -230,7 +236,15 @@ def pretty_print_dict(self, data, indent=0):
 
 
 #------------------------TESTING (TEMPORARY)----------------------#
-query = "events_all\n| _CommandLine contains 'base64' and _CommandLine contains '|bash' "
+
+#q = "events_all| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'cloudtrail.amazonaws.com' and (_eventName in~ ('StopLogging', 'UpdateTrail', 'DeleteTrail'))"
+#query = Query(q)
+
+
+
+
+
+#query = "events_all\n| _CommandLine contains 'base64' and _CommandLine contains '|bash' "
 # query = ("events_all\n| project _Hashes | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and _eventSource =~ 'lambda.amazonaws.com' and  _eventName startswith 'UpdateFunctionConfiguration' and _destination.port in (8080, 21, 80, 23, 50000, 1521, 27017, 1433, 11211, 3306, 15672, 5900, 5901, 5902, 5903, 5904) ")
 # query= "events_all\n| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and (_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider')"
 # #

@@ -4,7 +4,7 @@ selection_counter = 1
 acc_condition = ""
 current_selection_added = 0
 
-comparable_operator = {'==': ':', '=~': ':'}
+comparable_operator = {'==': '', '=~': ''}
 text_operator = {'contains': '|contains', 'startswith': '|startswith', 'endswith': '|endswith','matches_regex': '|re:'}
 array_operator = {'in': '', 'in~': '', 'has_all': '|contains|all'}
 operators = {**comparable_operator, **text_operator, **array_operator}
@@ -22,6 +22,7 @@ class GenerateRule:
         self.assign_project(mapped_project)
         self.assign_logsource(mapped_data_source)
         self.assign_fields_test(mapped_fields)
+        print(self.rule)
 
         # [{key , [values]}]
         # selection :{shira: [...] , ravit: [....]}
@@ -70,18 +71,20 @@ class GenerateRule:
             
             #Case 1: t is tuple:
             if type(t) is tuple:
-                
+                value = t[2]
+                if t[1] in array_operator:
+                    value = self.parse_to_list(t[2])
                 #update acc_condition.
                 if not current_selection_added:
                     acc_condition += key
                     current_selection_added += 1
                 
                 #Case 1a: AND 
-                if op == "and":
+                if op == "and" or op == None: 
                     inner_key = f'{t[0]}{operators[t[1]]}'
                     if inner_key not in self.rule["detection"][key]:
                         self.rule["detection"][key][inner_key] = []
-                    self.rule["detection"][key][inner_key].append(t[2])
+                    self.rule["detection"][key][inner_key].append(value) #changed
                     
                 #Case 1b: OR 
                 elif op == "or":
@@ -89,11 +92,11 @@ class GenerateRule:
                     added = False
                     for my_dict in self.rule["detection"][key]:
                         if inner_key in my_dict:
-                            my_dict[inner_key].append(t[2])
+                            my_dict[inner_key].append(value)#changed
                             added = True
                             break
                     if not added:
-                        self.rule["detection"][key].append({inner_key: [t[2]]})
+                        self.rule["detection"][key].append({inner_key: [value]}) #changed
             
             #Case 2: t is dictionary:
             #Case 2a: dictionary of same operator.
@@ -101,12 +104,14 @@ class GenerateRule:
                 self.scan_operands(t["operands"], key, op)
             
             #Case 2b: dictionary of different operator.
-            else:
+            elif not(op == None):
                 current_selection_added = 0
                 acc_condition += " "+ op +" ("
                 self.assign_fields_test(t)
                 acc_condition += ")"
-                
+            
+            else:
+                self.assign_fields_test(t) #none operator will always have 1 tuple
 
     def finalize_rule(self):
         self.fix_rule()
@@ -115,7 +120,13 @@ class GenerateRule:
 
 
 #-----------------------Helper Functions----------------------#
+    
+    def parse_to_list(self, s):
+    # Remove parentheses and split by comma
+        return [item.strip(" '") for item in s.strip("() ").split(",")]
+    
 
+    
     def create_condition(self):
         match "or" in acc_condition, "and" in acc_condition:
             case (False, False):
@@ -218,4 +229,3 @@ class GenerateRule:
 
 #             else:
 #                 self.assign_fields(t)
-
