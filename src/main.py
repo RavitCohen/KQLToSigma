@@ -1,13 +1,15 @@
-from src.Query import Query
-import re
 import yaml
+from src.KQL import KQL
+from src.SigmaRuleGenerator import SigmaRuleGenerator
 
 
 def main():
     query_input = input("Enter a query: ")
-    rule_to_print = Query(query_input).parse_to_rule()
-    print(rule_to_print)
-    print(yaml.dump(rule_to_print, default_flow_style=False))
+    parsed_query = KQL.parse(query_input)
+    rule_generator = SigmaRuleGenerator()
+    rule = rule_generator.from_query(parsed_query)
+    print(rule)
+    print(yaml.dump(rule, default_flow_style=False))
 
 if __name__ == "__main__":
     main()

@@ -1,95 +1,92 @@
-from debugpy.common.timestamp import current
+from src.KQL import KQL
+from src.config.operators import operators
+from src.utils.mapping import map_projects, map_field, map_log_source
+import utils.constants as const
 
-selection_counter = 1
-acc_condition = ""
 
-comparable_operator = {'==': ':', '=~': ':'}
-text_operator = {'contains': '|contains', 'startswith': '|startswith', 'endswith': '|endswith',
-                     'matches_regex': '|re:'}
-array_operator = {'in': '', 'in~': '', 'has_all': '|contains|all'}
+class SigmaRuleGenerator:
 
-operators = {**comparable_operator, **text_operator, **array_operator}
+    def __init__(self):
+        self.rule = {
+            "logsource": {
+                "product": [],
+                "service": []
+            },
+            "detection": {
+                "condition": ""
+            },  # maybe the value of OR selection will be a list
+            "field": []
+        }
+        self.fields = []
+        self.selection_counter = 0
 
-class GenerateRule:
+    def from_query(self, query: KQL):
+        products, services = map_log_source(query.data_sources)
+        self.set_log_source(products, services)
 
-#-------------------------Constructor------------------------#
+        fields = map_field(query.fields) # TODO: why copy? copy.deepcopy(map_field(query.fields))
+        self.set_detection(fields)
 
-    def __init__(self, mapped_project, mapped_data_source, mapped_fields):
-        self.rule = {"logsource": {"product": [], "service": []},
-                     "detection": {"condition": ""},  # maybe the value of OR selection will be a list
-                     "field": []}
+        project = map_projects(query.projects)
+        self.set_project(project)
 
-        self.assign_project(mapped_project)
-        self.assign_logsource(mapped_data_source)
-        self.assign_fields(mapped_fields)
+        return self.rule
 
         # [{key , [values]}]
         # selection :{shira: [...] , ravit: [....]}
         # selction1 : [{key1: [values]} , {key2: []} ]
 
 
-#--------------------------Functions-------------------------#
+    def set_project(self, project):
+        self.rule["field"] = project
 
-
-    def assign_project(self, mapped_project):
-        self.rule["field"] = mapped_project
-
-
-    def assign_logsource(self, mapped_data_source):
-        products, services = mapped_data_source
+    def set_log_source(self, products, services):
         self.rule["logsource"]["product"] = products
         self.rule["logsource"]["service"] = services
 
-
-    def assign_fields(self, mapped_fields):
-        global operators
-        global selection_counter
-
+    def set_detection(self, fields):
+        # selection_counter = 0 # instead of inside self
         current_operator = None  # 1 = or , 0 = and
         selection_key = "selection"
 
         # check logical operator and update operator_flag
-        if mapped_fields["logical operation"] == "or":
-            current_operator = 1
-            selection_key = f'selection_{selection_counter}'
+        logical_operation = fields["logical operation"]
+        if logical_operation == const.OR:
+            current_operator = logical_operation
+            selection_key = f'selection_{self.selection_counter}'
             self.rule["detection"][selection_key] = []
-        elif mapped_fields["logical operation"] == "and":
-            current_operator = 0
-            selection_key = f'selection_{selection_counter}'
+        elif logical_operation == const.AND:
+            current_operator = logical_operation
+            selection_key = f'selection_{self.selection_counter}'
             self.rule["detection"][selection_key] = {}
-        selection_counter += 1
+        self.selection_counter += 1
 
         # scan the operands
-        for t in mapped_fields["operands"]:
-            if type(t) is tuple:
+        for operand in fields["operands"]:
+            if type(operand) is tuple:
                 # case2: AND case
-                if current_operator == 0:
-                    inner_key = f'{t[0]}{operators[t[1]]}'
+                if current_operator == const.AND:
+                    inner_key = f'{operand[0]}{operators[operand[1]]}'
                     if inner_key not in self.rule["detection"][selection_key]:
                         self.rule["detection"][selection_key][inner_key] = []
-                    self.rule["detection"][selection_key][inner_key].append(t[2])
+                    self.rule["detection"][selection_key][inner_key].append(operand[2])
 
                     # case2: OR case
-                elif current_operator == 1:
-                    inner_key = f'{t[0]}{operators[t[1]]}'
+                elif current_operator == const.OR:
+                    inner_key = f'{operand[0]}{operators[operand[1]]}'
                     added = False
                     for my_dict in self.rule["detection"][selection_key]:
                         if inner_key in my_dict:
-                            my_dict[inner_key].append(t[2])
+                            my_dict[inner_key].append(operand[2])
                             added = True
                             break
                     if not added:
                         self.rule["detection"][selection_key].append({inner_key: [t[2]]})
 
             else:
-                self.assign_fields(t)
+                self.set_detection(operand)
 
         # TODO: clean all selection that empty and move to genetarte rule
-
-
-    def finalize_rule(self):
-        return self.rule
-
 
     # def pretty_print_dict(self, data, indent=0):
     #     spacing = '    '  # Define the indentation size (4 spaces)

@@ -1,0 +1,2 @@
+OR = "or"
+AND = "and"
