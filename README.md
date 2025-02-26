@@ -35,7 +35,6 @@ This tool extracts key components from a KQL query, such as table names, project
 
 **KQL Query:**
 ```**KQL Query:**
-```kql
 events_all
 | where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and (_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider')
 ```
