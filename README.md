@@ -20,9 +20,9 @@ python main.py
 
 You will be prompted to enter a KQL query, and the corresponding Sigma rule will be generated and displayed.
 
-![Alt text](./screenshot1.png)
+![Alt text](screenshot1.PNG)
 
-![Alt text](./screenshot2.png)
+![Alt text](screenshot2.PNG)
 
 ## Project Components
 
