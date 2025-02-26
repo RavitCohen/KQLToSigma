@@ -34,23 +34,40 @@ This tool extracts key components from a KQL query, such as table names, project
 ### Example
 
 **KQL Query:**
+```**KQL Query:**
 ```kql
-SecurityEvent | project EventID, CommandLine | where EventID == 4688
+events_all
+| where data_source_type_id in (456, 460, 501, 502, 507, 440, 347) and (_eventSource =~ 'sts.amazonaws.com' and _eventName =~ 'AssumeRoleWithSAML') or (_eventSource =~ 'iam.amazonaws.com' and _eventName =~ 'UpdateSAMLProvider')
 ```
 
 **Generated Sigma Rule:**
 ```yaml
 logsource:
-  product: windows
-  service: security
+  product: cloud
+  service: aws
 
 detection:
   selection:
-    EventID: 4688
-    process_cmd: '*'
-
-condition: selection
+    data_source_type_id:
+      - 456
+      - 460
+      - 501
+      - 502
+      - 507
+      - 440
+      - 347
+    _eventSource:
+      - 'sts.amazonaws.com'
+    _eventName:
+      - 'AssumeRoleWithSAML'
+  selection_2:
+    _eventSource:
+      - 'iam.amazonaws.com'
+    _eventName:
+      - 'UpdateSAMLProvider'
+  condition: selection or selection_2
 ```
+
 
 ## License
 
