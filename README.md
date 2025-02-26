@@ -20,7 +20,7 @@ python main.py
 
 You will be prompted to enter a KQL query, and the corresponding Sigma rule will be generated and displayed.
 
-<img src="screenshot1.png" alt="Description" width="500"/>
+<img src="screenshot1.PNG" alt="Description" width="500"/>
 
 ![Alt text](screenshot2.PNG)
 
