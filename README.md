@@ -168,10 +168,6 @@ detection:
 
 
 
-## License
-
-This project is licensed under the MIT License.
-
 ## Contributors
 
 - Shira Weiss Edri
