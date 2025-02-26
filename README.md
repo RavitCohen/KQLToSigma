@@ -42,29 +42,17 @@ events_all
 **Generated Sigma Rule:**
 ```yaml
 logsource:
-  product: cloud
-  service: aws
+  product: aws
+  service: cloudtrail
 
 detection:
-  selection:
-    data_source_type_id:
-      - 456
-      - 460
-      - 501
-      - 502
-      - 507
-      - 440
-      - 347
-    _eventSource:
-      - 'sts.amazonaws.com'
-    _eventName:
-      - 'AssumeRoleWithSAML'
+  selection_1:
+    eventName:'AssumeRoleWithSAML'
+    eventSource:'sts.amazonaws.com' 
   selection_2:
-    _eventSource:
-      - 'iam.amazonaws.com'
-    _eventName:
-      - 'UpdateSAMLProvider'
-  condition: selection or selection_2
+    eventName:'UpdateSAMLProvider'
+    eventSource:'iam.amazonaws.com'
+  condition: 1 of selection_*
 ```
 
 
