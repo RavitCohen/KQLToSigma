@@ -24,6 +24,8 @@ You will be prompted to enter a KQL query, and the corresponding Sigma rule will
 
 <img src="screenshot2.PNG" alt="Description" width="700"/>
 
+<img src="screenshot3.PNG" alt="Description" width="700"/>
+
 
 ## Project Components
 
