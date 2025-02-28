@@ -1,6 +1,6 @@
 import json
 import os
-from Query import Query
+from KQL import KQL
 import yaml
 
 

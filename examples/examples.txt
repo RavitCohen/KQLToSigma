@@ -1,6 +1,54 @@
+events_all
+| where data_source_type_id=12 and (_EventID == '4624' and _LogonType == '10') and 
+
+(not((((ipv4_is_in_range(_, '127.0.0.0/8') or ipv4_is_in_range(_, '10.0.0.0/8') or ipv4_is_in_range(_, '172.16.0.0/12') or ipv4_is_in_range(_, '192.168.0.0/16')) or (ipv4_is_in_range(i, '127.0.0.0/8') or ipv4_is_in_range(i, '10.0.0.0/8') or ipv4_is_in_range(i, '172.16.0.0/12') or ipv4_is_in_range(i, '192.168.0.0/16')) or (ipv4_is_in_range(p, '127.0.0.0/8') or ipv4_is_in_range(p, '10.0.0.0/8') or ipv4_is_in_range(p, '172.16.0.0/12') or ipv4_is_in_range(p, '192.168.0.0/16')) or (ipv4_is_in_range(v, '127.0.0.0/8') or ipv4_is_in_range(v, '10.0.0.0/8') or ipv4_is_in_range(v, '172.16.0.0/12') or ipv4_is_in_range(v, '192.168.0.0/16')) or (ipv4_is_in_range(4, '127.0.0.0/8') or ipv4_is_in_range(4, '10.0.0.0/8') or ipv4_is_in_range(4, '172.16.0.0/12') or ipv4_is_in_range(4, '192.168.0.0/16'))) or ((_ == '::1' or i == '::1' or p == '::1' or v == '::1' or 6 == '::1') or ((_ startswith 'fe80:' or _ startswith 'fc' or _ startswith 'fd') or (i startswith 'fe80:' or i startswith 'fc' or i startswith 'fd') or (p startswith 'fe80:' or p startswith 'fc' or p startswith 'fd') or (v startswith 'fe80:' or v startswith 'fc' or v startswith 'fd') or (6 startswith 'fe80:' or 6 startswith 'fc' or 6 startswith 'fd'))) or ((isnull(_)) or (isnull(i)) or (isnull(p)) or (isnull(v)) or isnull(4) or isnull(6)))))",
+      
+
+
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4624
+        LogonType: 10
+    filter_ipv4:        
+        IpAddress|cidr:
+            - '127.0.0.0/8'
+            - '10.0.0.0/8'            
+            - '172.16.0.0/12'           
+            - '192.168.0.0/16'   
+    filter_ipv6:        
+        - IpAddress: '::1'        
+        - IpAddress|startswith:
+            - 'fe80:'      
+            - 'fc'        
+            - 'fd'   
+    filter_empty:       
+        IpAddress: '-'    
+    condition: selection and not 1 of filter_*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 events_all| where (_fileName contains 'C:\\\\Windows\\\\' or _fileName contains 'C:\\\\Temp\\\\' or _fileName contains 'C:\\\\PerfLogs\\\\' or _fileName contains 'C:\\\\Users\\\\Public\\\\' or _fileName contains 'C:\\\\Users\\\\Default\\\\' or _fileName contains '\\\\Client\\\\' or _fileName contains '\\\\tsclient\\\\' or _fileName contains '\\\\inetpub\\\\' or _fileName contains '/www/' or _fileName contains 'apache' or _fileName contains 'tomcat' or _fileName contains 'nginx' or _fileName contains 'weblogic')
         or (_fileName endswith '.asax' or _fileName endswith '.ashx' or _fileName endswith '.asmx' or _fileName endswith '.asp' or _fileName endswith '.aspx' or _fileName endswith '.bat' or _fileName endswith '.cfm' or _fileName endswith '.cgi' or _fileName endswith '.chm' or _fileName endswith '.cmd' or _fileName endswith '.dat' or _fileName endswith '.ear' or _fileName endswith '.gif' or _fileName endswith '.hta' or _fileName endswith '.jpeg' or _fileName endswith '.jpg' or _fileName endswith '.jsp' or _fileName endswith '.jspx' or _fileName endswith '.lnk' or _fileName endswith '.php' or _fileName endswith '.pl' or _fileName endswith '.png' or _fileName endswith '.ps1' or _fileName endswith '.psm1' or _fileName endswith '.py' or _fileName endswith '.pyc' or _fileName endswith '.rb' or _fileName endswith '.scf' or _fileName endswith '.sct' or _fileName endswith '.sh' or _fileName endswith '.svg' or _fileName endswith '.txt' or _fileName endswith '.vbe' or _fileName endswith '.vbs' or _fileName endswith '.war' or _fileName endswith '.wsf' or _fileName endswith '.wsh' or _fileName endswith '.xml')
-| project _User        
+| project _User     
         
 detection:
     selection_path:
@@ -550,7 +598,7 @@ detection:
 
 
 events_all
-| where data_source_type_id=11 and _CommandLine contains 'base64 ' and ((_CommandLine contains '| bash ' or _CommandLine contains '| sh ' or _CommandLine contains '|bash ' or _CommandLine contains '|sh ') or (_CommandLine endswith ' |sh' or _CommandLine endswith '| bash' or _CommandLine endswith '| sh' or _CommandLine endswith '|bash'))",
+| where data_source_type_id==11 and _CommandLine contains 'base64 ' and ((_CommandLine contains '| bash ' or _CommandLine contains '| sh ' or _CommandLine contains '|bash ' or _CommandLine contains '|sh ') or (_CommandLine endswith ' |sh' or _CommandLine endswith '| bash' or _CommandLine endswith '| sh' or _CommandLine endswith '|bash'))",
         
 logsource:
     product: linux
@@ -1309,41 +1357,38 @@ STOP
         "sigma_rule": "title: Potential Netcat Reverse Shell Execution\nid: 7f734ed0-4f47-46c0-837f-6ee62505abd9\nstatus: experimental\ndescription: Detects execution of netcat with the \"-e\" flag followed by common shells. This could be a sign of a potential reverse shell setup.\nreferences:\n    - https://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet\n    - https://www.revshells.com/\n    - https://www.hackingtutorials.org/networking/hacking-netcat-part-2-bind-reverse-shells/\n    - https://www.infosecademy.com/netcat-reverse-shells/\n    - https://man7.org/linux/man-pages/man1/ncat.1.html\nauthor: '@d4ns4n_, Nasreddine Bencherchali (Nextron Systems)'\ndate: 2023/04/07\ntags:\n    - attack.execution\n    - attack.t1059\nlogsource:\n    category: process_creation\n    product: linux\ndetection:\n    selection_nc:\n        Image|endswith:\n           - '/nc'\n           - '/ncat'\n    selection_flags:\n        CommandLine|contains:\n            - ' -c '\n            - ' -e '\n    selection_shell:\n        CommandLine|contains:\n            - ' ash'\n            - ' bash'\n            - ' bsh'\n            - ' csh'\n            - ' ksh'\n            - ' pdksh'\n            - ' sh'\n            - ' tcsh'\n            - '/bin/ash'\n            - '/bin/bash'\n            - '/bin/bsh'\n            - '/bin/csh'\n            - '/bin/ksh'\n            - '/bin/pdksh'\n            - '/bin/sh'\n            - '/bin/tcsh'\n            - '/bin/zsh'\n            - '$IFSash'\n            - '$IFSbash'\n            - '$IFSbsh'\n            - '$IFScsh'\n            - '$IFSksh'\n            - '$IFSpdksh'\n            - '$IFSsh'\n            - '$IFStcsh'\n            - '$IFSzsh'\n    condition: all of selection_*\nfalsepositives:\n    - Unlikely\nlevel: high\n",
         "warnings": null
     },
-    {
-        "category": "process_creation",
-        "description": "Detects enumeration of local or remote network services.",
-        "detection": {
-            "condition": "(netcat and not netcat_listen_flag) or network_scanning_tools",
-            "netcat": {
-                "Image|endswith": [
-                    "/nc",
-                    "/netcat"
-                ]
-            },
-            "netcat_listen_flag": {
-                "CommandLine|contains": "l"
-            },
-            "network_scanning_tools": {
-                "Image|endswith": [
-                    "/telnet",
-                    "/nmap"
-                ]
-            }
-        },
-        "error": {
-            "code": "NO_ERROR",
-            "message": ""
-        },
-        "external_link": "https://github.com/SigmaHQ/sigma/tree/master/rules/linux/process_creation/proc_creation_lnx_network_service_scanning.yml",
-        "id": "sigma-3e102cd9-a70d-4a7a-9508-403963092f31",
-        "name": "Linux Network Service Scanning",
-        "origin": "sigma",
-        "product": "linux",
-        "pysigma_kql": "events_all\n| where data_source_type_id=11 and (((file_name endswith 'nc' or file_name endswith 'netcat') and (not(_CommandLine contains 'l'))) or (file_name endswith 'telnet' or file_name endswith 'nmap'))",
-        "service": null,
-        "sigma_rule": "title: Linux Network Service Scanning\nid: 3e102cd9-a70d-4a7a-9508-403963092f31\nstatus: test\ndescription: Detects enumeration of local or remote network services.\nreferences:\n    - https://github.com/redcanaryco/atomic-red-team/blob/f339e7da7d05f6057fdfcdd3742bfcf365fee2a9/atomics/T1046/T1046.md\nauthor: Alejandro Ortuno, oscd.community\ndate: 2020/10/21\nmodified: 2022/10/09\ntags:\n    - attack.discovery\n    - attack.t1046\nlogsource:\n    category: process_creation\n    product: linux\ndetection:\n    netcat:\n        Image|endswith:\n            - '/nc'\n            - '/netcat'\n    network_scanning_tools:\n        Image|endswith:\n            - '/telnet' # could be wget, curl, ssh, many things. basically everything that is able to do network connection. consider fine tuning\n            - '/nmap'\n    netcat_listen_flag:\n        CommandLine|contains: 'l'\n    condition: (netcat and not netcat_listen_flag) or network_scanning_tools\nfalsepositives:\n    - Legitimate administration activities\nlevel: low\n",
-        "warnings": null
-    },
+    
+
+
+
+#NOT examples
+events_all| 
+where data_source_type_id=11 and 
+(((file_name endswith 'nc' or file_name endswith 'netcat') and (not(_CommandLine contains 'l'))) or (file_name endswith 'telnet' or file_name endswith 'nmap'))",
+        
+logsource: 
+    product: linux
+detection:
+    netcat:\n        
+        Image|endswith:\n            
+            - '/nc'\n            
+            - '/netcat'\n    
+        network_scanning_tools:\n        
+            Image|endswith:\n            
+                - '/telnet' 
+                - '/nmap'\n    
+        netcat_listen_flag:\n        
+            CommandLine|contains: 'l'\n    
+    condition: (netcat and not netcat_listen_flag) or network_scanning_tools
+   
+
+
+
+
+
+
+
+
     {
         "category": "process_creation",
         "description": "Detects usage of nohup which could be leveraged by an attacker to keep a process running or break out from restricted environments",
@@ -2029,43 +2074,44 @@ STOP
         "sigma_rule": "title: Chmod Suspicious Directory\nid: 6419afd1-3742-47a5-a7e6-b50386cd15f8\nstatus: experimental\ndescription: Detects chmod targeting files in abnormal directory paths.\nreferences:\n    - https://www.intezer.com/blog/malware-analysis/new-backdoor-sysjoker/\n    - https://github.com/redcanaryco/atomic-red-team/blob/f339e7da7d05f6057fdfcdd3742bfcf365fee2a9/atomics/T1222.002/T1222.002.md\nauthor: 'Christopher Peacock @SecurePeacock, SCYTHE @scythe_io'\ndate: 2022/06/03\ntags:\n    - attack.defense_evasion\n    - attack.t1222.002\nlogsource:\n    product: linux\n    category: process_creation\ndetection:\n    selection:\n        Image|endswith: '/chmod'\n        CommandLine|contains:\n            - '/tmp/'\n            - '/.Library/'\n            - '/etc/'\n            - '/opt/'\n    condition: selection\nfalsepositives:\n    - Admin changing file permissions.\nlevel: medium\n",
         "warnings": null
     },
-    {
-        "category": "process_creation",
-        "description": "Detects a suspicious curl process start the adds a file to a web request",
-        "detection": {
-            "condition": "all of selection_* and not 1 of filter_optional_*",
-            "filter_optional_localhost": {
-                "CommandLine|contains": [
-                    "://localhost",
-                    "://127.0.0.1"
-                ]
-            },
-            "selection_cli": {
-                "CommandLine|contains": [
-                    " --form",
-                    " --upload-file ",
-                    " --data ",
-                    " --data-"
-                ],
-                "CommandLine|re": "\\s-[FTd]\\s"
-            },
-            "selection_img": {
-                "Image|endswith": "/curl"
-            }
-        },
-        "error": {
-            "code": "NO_ERROR",
-            "message": ""
-        },
-        "external_link": "https://github.com/SigmaHQ/sigma/tree/master/rules/linux/process_creation/proc_creation_lnx_susp_curl_fileupload.yml",
-        "id": "sigma-00b90cc1-17ec-402c-96ad-3a8117d7a582",
-        "name": "Suspicious Curl File Upload - Linux",
-        "origin": "sigma",
-        "product": "linux",
-        "pysigma_kql": "events_all\n| where data_source_type_id=11 and (file_name endswith 'curl' and ((_CommandLine contains ' --form' or _CommandLine contains ' --upload-file ' or _CommandLine contains ' --data ' or _CommandLine contains ' --data-') or _CommandLine matches regex '\\s-[FTd]\\s')) and (not((_CommandLine contains '://localhost' or _CommandLine contains '://127.0.0.1')))",
-        "service": null,
-        "sigma_rule": "title: Suspicious Curl File Upload - Linux\nid: 00b90cc1-17ec-402c-96ad-3a8117d7a582\nrelated:\n    - id: 00bca14a-df4e-4649-9054-3f2aa676bc04\n      type: derived\nstatus: experimental\ndescription: Detects a suspicious curl process start the adds a file to a web request\nreferences:\n    - https://twitter.com/d1r4c/status/1279042657508081664\n    - https://medium.com/@petehouston/upload-files-with-curl-93064dcccc76\n    - https://github.com/redcanaryco/atomic-red-team/blob/f339e7da7d05f6057fdfcdd3742bfcf365fee2a9/atomics/T1105/T1105.md#atomic-test-19---curl-upload-file\n    - https://curl.se/docs/manpage.html\n    - https://www.trendmicro.com/en_us/research/22/i/how-malicious-actors-abuse-native-linux-tools-in-their-attacks.html\nauthor: Nasreddine Bencherchali (Nextron Systems), Cedric MAURUGEON (Update)\ndate: 2022/09/15\nmodified: 2023/05/02\ntags:\n    - attack.exfiltration\n    - attack.t1567\n    - attack.t1105\nlogsource:\n    category: process_creation\n    product: linux\ndetection:\n    selection_img:\n        Image|endswith: '/curl'\n    selection_cli:\n        - CommandLine|contains:\n            - ' --form' # Also covers the \"--form-string\"\n            - ' --upload-file '\n            - ' --data '\n            - ' --data-' # For flags like: \"--data-ascii\", \"--data-binary\", \"--data-raw\", \"--data-urlencode\"\n        - CommandLine|re: '\\s-[FTd]\\s' # We use regex to ensure a case sensitive argument detection\n    filter_optional_localhost:\n        CommandLine|contains:\n            - '://localhost'\n            - '://127.0.0.1'\n    condition: all of selection_* and not 1 of filter_optional_*\nfalsepositives:\n    - Scripts created by developers and admins\nlevel: medium\n",
-        "warnings": null
+    
+
+
+
+events_all\n| 
+where data_source_type_id==11 and 
+(file_name endswith 'curl' and ((_CommandLine contains ' --form' or _CommandLine contains ' --upload-file ' or _CommandLine contains ' --data ' or _CommandLine contains ' --data-') or _CommandLine matches regex '\\s-[FTd]\\s')) and (not((_CommandLine contains '://localhost' or _CommandLine contains '://127.0.0.1')))",
+
+events_all\n| 
+where data_source_type_id==11 and 
+(not((_CommandLine contains '://localhost' or _CommandLine contains '://127.0.0.1')))
+
+
+logsource:
+    product: linux
+detection:   
+    selection_img:       
+        Image|endswith: '/curl'   
+    selection_cli:        
+        - CommandLine|contains:           
+            - ' --form'           
+            - ' --upload-file '         
+            - ' --data '            
+            - ' --data-' 
+        - CommandLine|re: '\\s-[FTd]\\s' 
+    filter_optional_localhost:        
+        CommandLine|contains:            
+            - '://localhost'           
+            - '://127.0.0.1'   
+    condition: all of selection_* and not 1 of filter_optional_*
+      
+
+
+
+
+
+
+
     },
     {
         "category": "process_creation",
@@ -67075,114 +67121,113 @@ STOP
         "sigma_rule": "title: Modify User Shell Folders Startup Value\nid: 9c226817-8dc9-46c2-a58d-66655aafd7dc\nstatus: experimental\ndescription: Detect modification of the startup key to a path where a payload could be stored to be launched during startup\nreferences:\n    - https://github.com/redcanaryco/atomic-red-team/blob/9e5b12c4912c07562aec7500447b11fa3e17e254/atomics/T1547.001/T1547.001.md\nauthor: frack113\ndate: 2022/10/01\ntags:\n    - attack.persistence\n    - attack.privilege_escalation\n    - attack.t1547.001\nlogsource:\n    product: windows\n    category: registry_set\ndetection:\n    selection:\n        EventType: SetValue\n        TargetObject|contains: 'SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders'\n        TargetObject|endswith: 'Startup' # cover Common Startup and Startup\n        # can use Details|contains: path if get too many FP\n    condition: selection\nfalsepositives:\n    - Unknown\nlevel: high\n",
         "warnings": null
     },
-    {
-        "category": "registry_set",
-        "description": "Monitor the creation of a new key under 'TaskCache' when a new scheduled task is registered by a process that is not svchost.exe, which is suspicious",
-        "detection": {
-            "condition": "selection and not 1 of filter*",
-            "filter": {
-                "TargetObject|contains": [
-                    "Microsoft\\Windows\\UpdateOrchestrator",
-                    "Microsoft\\Windows\\SoftwareProtectionPlatform\\SvcRestartTask\\Index",
-                    "Microsoft\\Windows\\Flighting\\OneSettings\\RefreshCache\\Index"
-                ]
-            },
-            "filter_dropbox_updater": {
-                "Image": [
-                    "C:\\Program Files (x86)\\Dropbox\\Update\\DropboxUpdate.exe",
-                    "C:\\Program Files\\Dropbox\\Update\\DropboxUpdate.exe"
-                ]
-            },
-            "filter_explorer": {
-                "Image": "C:\\Windows\\explorer.exe",
-                "TargetObject|contains": "\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\PLA\\Server Manager Performance Monitor\\"
-            },
-            "filter_msiexec": {
-                "Image": "C:\\Windows\\System32\\msiexec.exe"
-            },
-            "filter_ngen": {
-                "Image|endswith": "\\ngen.exe",
-                "Image|startswith": "C:\\Windows\\Microsoft.NET\\Framework",
-                "TargetObject|contains": [
-                    "\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks\\{B66B135D-DA06-4FC4-95F8-7458E1D10129}",
-                    "\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\.NET Framework\\.NET Framework NGEN"
-                ]
-            },
-            "filter_office_click_to_run": {
-                "Image": [
-                    "C:\\Program Files\\Microsoft Office\\root\\Integration\\Integrator.exe",
-                    "C:\\Program Files (x86)\\Microsoft Office\\root\\Integration\\Integrator.exe"
-                ]
-            },
-            "filter_svchost": {
-                "Image": "C:\\WINDOWS\\system32\\svchost.exe"
-            },
-            "filter_system": {
-                "Image": "System"
-            },
-            "filter_tiworker": {
-                "Image|endswith": "\\TiWorker.exe",
-                "Image|startswith": "C:\\Windows\\"
-            },
-            "selection": {
-                "EventType": "SetValue",
-                "TargetObject|contains": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\"
-            }
-        },
-        "error": {
-            "code": "NO_ERROR",
-            "message": ""
-        },
-        "external_link": "https://github.com/SigmaHQ/sigma/tree/master/rules/windows/registry/registry_set/registry_set_taskcache_entry.yml",
-        "id": "sigma-4720b7df-40c3-48fd-bbdf-fd4b3c464f0d",
-        "name": "Scheduled TaskCache Change by Uncommon Program",
-        "origin": "sigma",
-        "product": "windows",
-        "pysigma_kql": "events_all\n| where data_source_type_id=12 and (_EventType =~ 'SetValue' and _TargetObject contains 'SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\') and (not(((_TargetObject contains 'Microsoft\\\\Windows\\\\UpdateOrchestrator' or _TargetObject contains 'Microsoft\\\\Windows\\\\SoftwareProtectionPlatform\\\\SvcRestartTask\\\\Index' or _TargetObject contains 'Microsoft\\\\Windows\\\\Flighting\\\\OneSettings\\\\RefreshCache\\\\Index') or (dir_path startswith 'C:\\\\Windows\\\\' and file_name endswith 'TiWorker.exe') or (file_name =~ 'svchost.exe' and dir_path =~ 'C:\\\\WINDOWS\\\\system32') or ((file_name startswith 'Framework' and dir_path =~ 'C:\\\\Windows\\\\Microsoft.NET') and file_name endswith 'ngen.exe' and (_TargetObject contains '\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\Tasks\\\\{B66B135D-DA06-4FC4-95F8-7458E1D10129}' or _TargetObject contains '\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\Tree\\\\Microsoft\\\\Windows\\\\.NET Framework\\\\.NET Framework NGEN')) or ((file_name =~ 'Integrator.exe' and dir_path =~ 'C:\\\\Program Files\\\\Microsoft Office\\\\root\\\\Integration') or (file_name =~ 'Integrator.exe' and dir_path =~ 'C:\\\\Program Files (x86)\\\\Microsoft Office\\\\root\\\\Integration')) or (file_name =~ 'msiexec.exe' and dir_path =~ 'C:\\\\Windows\\\\System32') or ((file_name =~ 'DropboxUpdate.exe' and dir_path =~ 'C:\\\\Program Files (x86)\\\\Dropbox\\\\Update') or (file_name =~ 'DropboxUpdate.exe' and dir_path =~ 'C:\\\\Program Files\\\\Dropbox\\\\Update')) or ((file_name =~ 'explorer.exe' and dir_path =~ 'C:\\\\Windows') and _TargetObject contains '\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\Tree\\\\Microsoft\\\\Windows\\\\PLA\\\\Server Manager Performance Monitor\\\\') or file_name =~ 'System')))",
-        "service": null,
-        "sigma_rule": "title: Scheduled TaskCache Change by Uncommon Program\nid: 4720b7df-40c3-48fd-bbdf-fd4b3c464f0d\nstatus: experimental\ndescription: Monitor the creation of a new key under 'TaskCache' when a new scheduled task is registered by a process that is not svchost.exe, which is suspicious\nreferences:\n    - https://thedfirreport.com/2021/03/29/sodinokibi-aka-revil-ransomware/\n    - https://labs.f-secure.com/blog/scheduled-task-tampering/\nauthor: Syed Hasan (@syedhasan009)\ndate: 2021/06/18\nmodified: 2022/10/21\ntags:\n    - attack.persistence\n    - attack.t1053\n    - attack.t1053.005\nlogsource:\n    category: registry_set\n    product: windows\ndetection:\n    selection:\n        EventType: SetValue\n        TargetObject|contains: 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\'\n    filter:\n        TargetObject|contains:\n            - 'Microsoft\\Windows\\UpdateOrchestrator'\n            - 'Microsoft\\Windows\\SoftwareProtectionPlatform\\SvcRestartTask\\Index'\n            - 'Microsoft\\Windows\\Flighting\\OneSettings\\RefreshCache\\Index'\n    filter_tiworker:\n        Image|startswith: 'C:\\Windows\\'\n        Image|endswith: '\\TiWorker.exe'\n    filter_svchost:\n        Image: 'C:\\WINDOWS\\system32\\svchost.exe'\n    filter_ngen:\n        Image|startswith: 'C:\\Windows\\Microsoft.NET\\Framework' # \\Framework\\ and \\Framework64\\\n        Image|endswith: '\\ngen.exe'\n        TargetObject|contains:\n            - '\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks\\{B66B135D-DA06-4FC4-95F8-7458E1D10129}'\n            - '\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\.NET Framework\\.NET Framework NGEN'\n    filter_office_click_to_run:\n        Image:\n            - 'C:\\Program Files\\Microsoft Office\\root\\Integration\\Integrator.exe'\n            - 'C:\\Program Files (x86)\\Microsoft Office\\root\\Integration\\Integrator.exe'\n    filter_msiexec:\n        Image: 'C:\\Windows\\System32\\msiexec.exe'\n    filter_dropbox_updater:\n        Image:\n            - 'C:\\Program Files (x86)\\Dropbox\\Update\\DropboxUpdate.exe'\n            - 'C:\\Program Files\\Dropbox\\Update\\DropboxUpdate.exe'\n    filter_explorer:\n        Image: 'C:\\Windows\\explorer.exe'\n        TargetObject|contains: '\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\PLA\\Server Manager Performance Monitor\\'\n    filter_system:\n        Image: 'System'\n    condition: selection and not 1 of filter*\nfalsepositives:\n    - Unknown\nlevel: high\n",
-        "warnings": null
-    },
-    {
-        "category": "registry_set",
-        "description": "Detect modification of TreatAs key to enable \"rundll32.exe -sta\" command",
-        "detection": {
-            "condition": "selection and not 1 of filter_*",
-            "filter_misexec": {
-                "Image": [
-                    "C:\\Windows\\system32\\msiexec.exe",
-                    "C:\\Windows\\SysWOW64\\msiexec.exe"
-                ]
-            },
-            "filter_office": {
-                "Image|endswith": "\\OfficeClickToRun.exe",
-                "Image|startswith": "C:\\Program Files\\Common Files\\Microsoft Shared\\ClickToRun\\"
-            },
-            "filter_office2": {
-                "Image": "C:\\Program Files (x86)\\Microsoft Office\\root\\integration\\integrator.exe"
-            },
-            "filter_svchost": {
-                "Image": "C:\\Windows\\system32\\svchost.exe"
-            },
-            "selection": {
-                "EventType": "SetValue",
-                "TargetObject|endswith": "TreatAs\\(Default)"
-            }
-        },
-        "error": {
-            "code": "NO_ERROR",
-            "message": ""
-        },
-        "external_link": "https://github.com/SigmaHQ/sigma/tree/master/rules/windows/registry/registry_set/registry_set_treatas_persistence.yml",
-        "id": "sigma-dc5c24af-6995-49b2-86eb-a9ff62199e82",
-        "name": "COM Hijacking via TreatAs",
-        "origin": "sigma",
-        "product": "windows",
-        "pysigma_kql": "events_all\n| where data_source_type_id=12 and (_EventType =~ 'SetValue' and _TargetObject endswith 'TreatAs\\\\(Default)') and (not(((dir_path startswith 'C:\\\\Program Files\\\\Common Files\\\\Microsoft Shared\\\\ClickToRun\\\\' and file_name endswith 'OfficeClickToRun.exe') or (file_name =~ 'integrator.exe' and dir_path =~ 'C:\\\\Program Files (x86)\\\\Microsoft Office\\\\root\\\\integration') or (file_name =~ 'svchost.exe' and dir_path =~ 'C:\\\\Windows\\\\system32') or ((file_name =~ 'msiexec.exe' and dir_path =~ 'C:\\\\Windows\\\\system32') or (file_name =~ 'msiexec.exe' and dir_path =~ 'C:\\\\Windows\\\\SysWOW64')))))",
-        "service": null,
-        "sigma_rule": "title: COM Hijacking via TreatAs\nid: dc5c24af-6995-49b2-86eb-a9ff62199e82\nstatus: experimental\ndescription: Detect modification of TreatAs key to enable \"rundll32.exe -sta\" command\nreferences:\n    - https://github.com/redcanaryco/atomic-red-team/blob/40b77d63808dd4f4eafb83949805636735a1fd15/atomics/T1546.015/T1546.015.md\n    - https://www.youtube.com/watch?v=3gz1QmiMhss&t=1251s\nauthor: frack113\ndate: 2022/08/28\nmodified: 2023/01/06\ntags:\n    - attack.persistence\n    - attack.t1546.015\nlogsource:\n    category: registry_set\n    product: windows\ndetection:\n    selection:\n        EventType: SetValue\n        TargetObject|endswith: 'TreatAs\\(Default)'\n    filter_office:\n        Image|startswith: 'C:\\Program Files\\Common Files\\Microsoft Shared\\ClickToRun\\'\n        Image|endswith: '\\OfficeClickToRun.exe'\n    filter_office2:\n        Image: 'C:\\Program Files (x86)\\Microsoft Office\\root\\integration\\integrator.exe'\n    filter_svchost:\n        # Example of target object by svchost\n        # TargetObject: HKLM\\SOFTWARE\\Microsoft\\MsixRegistryCompatibility\\Package\\Microsoft.Paint_11.2208.6.0_x64__8wekyb3d8bbwe\\User\\SOFTWARE\\Classes\\CLSID\\{0003000A-0000-0000-C000-000000000046}\\TreatAs\\(Default)\n        # TargetObject: HKU\\S-1-5-21-1000000000-000000000-000000000-0000_Classes\\CLSID\\{0003000A-0000-0000-C000-000000000046}\\TreatAs\\(Default)\n        Image: 'C:\\Windows\\system32\\svchost.exe'\n    filter_misexec:\n        # This FP has been seen during installation/updates\n        Image:\n            - 'C:\\Windows\\system32\\msiexec.exe'\n            - 'C:\\Windows\\SysWOW64\\msiexec.exe'\n    condition: selection and not 1 of filter_*\nfalsepositives:\n    - Legitimate use\nlevel: medium\n",
-        "warnings": null
-    },
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        events_all\n| where data_source_type_id==12 and (_EventType =~ 'SetValue' and _TargetObject contains 'SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\') and (not(((_TargetObject contains 'Microsoft\\\\Windows\\\\UpdateOrchestrator' or _TargetObject contains 'Microsoft\\\\Windows\\\\SoftwareProtectionPlatform\\\\SvcRestartTask\\\\Index' or _TargetObject contains 'Microsoft\\\\Windows\\\\Flighting\\\\OneSettings\\\\RefreshCache\\\\Index') or (dir_path startswith 'C:\\\\Windows\\\\' and file_name endswith 'TiWorker.exe') or (file_name =~ 'svchost.exe' and dir_path =~ 'C:\\\\WINDOWS\\\\system32') or ((file_name startswith 'Framework' and dir_path =~ 'C:\\\\Windows\\\\Microsoft.NET') and file_name endswith 'ngen.exe' and (_TargetObject contains '\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\Tasks\\\\{B66B135D-DA06-4FC4-95F8-7458E1D10129}' or _TargetObject contains '\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\Tree\\\\Microsoft\\\\Windows\\\\.NET Framework\\\\.NET Framework NGEN')) or ((file_name =~ 'Integrator.exe' and dir_path =~ 'C:\\\\Program Files\\\\Microsoft Office\\\\root\\\\Integration') or (file_name =~ 'Integrator.exe' and dir_path =~ 'C:\\\\Program Files (x86)\\\\Microsoft Office\\\\root\\\\Integration')) or (file_name =~ 'msiexec.exe' and dir_path =~ 'C:\\\\Windows\\\\System32') or ((file_name =~ 'DropboxUpdate.exe' and dir_path =~ 'C:\\\\Program Files (x86)\\\\Dropbox\\\\Update') or (file_name =~ 'DropboxUpdate.exe' and dir_path =~ 'C:\\\\Program Files\\\\Dropbox\\\\Update')) or ((file_name =~ 'explorer.exe' and dir_path =~ 'C:\\\\Windows') and _TargetObject contains '\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\Tree\\\\Microsoft\\\\Windows\\\\PLA\\\\Server Manager Performance Monitor\\\\') or file_name =~ 'System')))",
+
+
+        logsource:
+            product: windows\n
+            detection:\n    
+                selection:\n        
+                    EventType: SetValue\n        
+                    TargetObject|contains: 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\'\n    
+                filter:\n        
+                    TargetObject|contains:\n            
+                        - 'Microsoft\\Windows\\UpdateOrchestrator'\n            
+                        - 'Microsoft\\Windows\\SoftwareProtectionPlatform\\SvcRestartTask\\Index'\n            
+                        - 'Microsoft\\Windows\\Flighting\\OneSettings\\RefreshCache\\Index'\n    
+                filter_tiworker:\n        
+                    Image|startswith: 'C:\\Windows\\'\n        
+                    Image|endswith: '\\TiWorker.exe'\n    
+                filter_svchost:\n        
+                    Image: 'C:\\WINDOWS\\system32\\svchost.exe'\n    
+                filter_ngen:\n        
+                    Image|startswith: 'C:\\Windows\\Microsoft.NET\\Framework' # \\Framework\\ and \\Framework64\\\n        
+                    Image|endswith: '\\ngen.exe'\n        
+                    TargetObject|contains:\n            
+                        - '\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks\\{B66B135D-DA06-4FC4-95F8-7458E1D10129}'\n            
+                        - '\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\.NET Framework\\.NET Framework NGEN'\n    
+                filter_office_click_to_run:\n        
+                    Image:\n            
+                        - 'C:\\Program Files\\Microsoft Office\\root\\Integration\\Integrator.exe'\n            
+                        - 'C:\\Program Files (x86)\\Microsoft Office\\root\\Integration\\Integrator.exe'\n    
+                filter_msiexec:\n        
+                    Image: 'C:\\Windows\\System32\\msiexec.exe'\n    
+                filter_dropbox_updater:\n        
+                    Image:\n            
+                        - 'C:\\Program Files (x86)\\Dropbox\\Update\\DropboxUpdate.exe'\n            
+                        - 'C:\\Program Files\\Dropbox\\Update\\DropboxUpdate.exe'\n    
+                filter_explorer:\n        
+                    Image: 'C:\\Windows\\explorer.exe'\n        
+                    TargetObject|contains: '\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\PLA\\Server Manager Performance Monitor\\'\n    
+                filter_system:\n        
+                    Image: 'System'\n    
+                condition: selection and not 1 of filter*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    events_all\n| where data_source_type_id==12 and (_EventType =~ 'SetValue' and _TargetObject endswith 'TreatAs\\\\(Default)') and (not(((dir_path startswith 'C:\\\\Program Files\\\\Common Files\\\\Microsoft Shared\\\\ClickToRun\\\\' and file_name endswith 'OfficeClickToRun.exe') or (file_name =~ 'integrator.exe' and dir_path =~ 'C:\\\\Program Files (x86)\\\\Microsoft Office\\\\root\\\\integration') or (file_name =~ 'svchost.exe' and dir_path =~ 'C:\\\\Windows\\\\system32') or ((file_name =~ 'msiexec.exe' and dir_path =~ 'C:\\\\Windows\\\\system32') or (file_name =~ 'msiexec.exe' and dir_path =~ 'C:\\\\Windows\\\\SysWOW64')))))",
+        
+    logsource:  
+        product: windows\n
+    detection:\n    
+        selection:\n        
+            EventType: SetValue\n        
+            TargetObject|endswith: 'TreatAs\\(Default)'\n    
+        filter_office:\n        
+            Image|startswith: 'C:\\Program Files\\Common Files\\Microsoft Shared\\ClickToRun\\'\n        
+            Image|endswith: '\\OfficeClickToRun.exe'\n    
+        filter_office2:\n        
+            Image: 'C:\\Program Files (x86)\\Microsoft Office\\root\\integration\\integrator.exe'\n    
+        filter_svchost:\n                     
+            Image: 'C:\\Windows\\system32\\svchost.exe'\n    
+        filter_misexec:\n       
+            Image:\n            
+                - 'C:\\Windows\\system32\\msiexec.exe'\n            
+                - 'C:\\Windows\\SysWOW64\\msiexec.exe'\n    
+        condition: selection and not 1 of filter_*
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     {
         "category": "registry_set",
         "description": "Detects UAC bypass method using Windows event viewer",
