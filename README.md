@@ -175,6 +175,18 @@ detection:
 
 
 
+## Further Work – Known Limitations and Edge Cases
+
+During the current implementation, several edge cases were identified but not fully addressed. These are documented below to guide future development and improvements:
+
+- Current version lacks full support for IPv (IPv4 / IPv6) cases.  
+- Partial handling of complex `dirpath` and `filename` scenarios.  
+- `project` field conversion may fail in certain cases.
+
+
+
+
+
 ## Contributors
 
 - Shira Weiss Edri
